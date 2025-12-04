@@ -9,12 +9,12 @@
   "theme_color": "#ff8a00",
   "icons": [
     {
-      "src": "/assets/bigmotor192.png",
+      "src": "https://iili.io/fIzliN4.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/assets/bigmotor500.png",
+      "src": "https://iili.io/fIzlZVS.png",
       "sizes": "500x500",
       "type": "image/png"
     }
