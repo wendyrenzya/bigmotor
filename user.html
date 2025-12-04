@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>User Area • BIG Motor</title>
+<title>Pengaturan • BIG Motor</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
 
@@ -14,7 +14,7 @@ const CLOUDINARY_UPLOAD = "https://api.cloudinary.com/v1_1/djifuridf/image/uploa
 const CLOUDINARY_PRESET = "bmt_upload";
 const $ = id => document.getElementById(id);
 
-/* ======= Bounce navigation (copy 1:1 typical) ======= */
+/* ======= Bounce navigation ======= */
 function bounceThenNavigate(el,url){
   if(el){
     el.classList.add("bounce");
@@ -22,40 +22,26 @@ function bounceThenNavigate(el,url){
   }
   setTimeout(()=> guardedNavigate(url),90);
 }
-function guardedNavigate(url){
-  window.location = url;
-}
-
+function guardedNavigate(url){ window.location = url; }
 
 /* ======= Init ======= */
 document.addEventListener("DOMContentLoaded", ()=>{
   loadUsers();
-  // set nav active
   const np = document.getElementById("navPengaturan");
   if(np) np.classList.add("nav-active");
 });
 </script>
 
 <style>
-    #previewFotoBg { display:none; }
-/* ====== Base / layout ====== */
 :root{--card:#fff}
 body{
   margin:0;
-  padding-bottom:92px; /* space for navbar */
+  padding-bottom:92px;
   background:#f4f5f7;
   font-family:Inter,Segoe UI,Roboto,Arial;
   color:#222;
 }
 *{ -webkit-tap-highlight-color:transparent }
-
-/* header */
-.header{
-  padding:14px 16px;
-  background:linear-gradient(135deg,#3E8BFF,#A259FF);
-  color:#fff;
-}
-.header .title{font-size:18px;font-weight:700}
 
 /* info card */
 .info-card{
@@ -64,155 +50,103 @@ body{
   padding:14px;
   border-radius:12px;
   box-shadow:0 3px 10px rgba(0,0,0,0.10);
-  display:flex;
-  gap:12px;
-  align-items:center;
+  display:flex; gap:12px; align-items:center;
 }
-.logo{
-  width:76px;height:76px;object-fit:contain;border-radius:0;border:none;box-shadow:none;
-}
-.info-text{font-size:14px;color:#222;}
+.logo{ width:76px;height:76px;object-fit:contain; }
 
-/* user list container */
+/* user list */
 .userlist{ padding:8px 16px 110px; }
 
-/* ========== USER CARD (ensure border + .me highlight) ========== */
+/* user card */
 .usercard{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  background:#fff;
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.05);
-  border:1px solid #e6e6e6; /* <<-- ensure border present */
-  position:relative;
+  display:flex;align-items:center;gap:12px;
+  background:#fff;padding:12px;border-radius:12px;
+  margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,0.05);
+  border:1px solid #e6e6e6;position:relative;
 }
-.usercard.me{
-  border:2px solid #007bff; /* highlight current user */
-}
-
-/* TAG YOU */
+.usercard.me{ border:2px solid #007bff; }
 .tagyou{
-  position:absolute;
-  top:-10px;
-  right:-10px;
-  background:#007bff;
-  color:#fff;
-  padding:5px 10px;
-  border-radius:20px;
-  font-size:11px;
-  font-weight:700;
-  box-shadow:0 4px 10px rgba(0,0,0,0.18);
-  z-index:12;
+  position:absolute;top:-10px;right:-10px;
+  background:#007bff;color:#fff;padding:5px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;
 }
 
-/* avatar area: avatar-wrap (overflow hidden) + floating button outside but within area */
-.avatar-area{ position:relative; width:64px; height:64px; }
+.avatar-area{ position:relative;width:64px;height:64px; }
 .avatar-wrap{ width:64px;height:64px;border-radius:50%;overflow:hidden; }
-.avatar-wrap img{ width:100%;height:100%; object-fit:cover; display:block; }
+.avatar-wrap img{ width:100%;height:100%;object-fit:cover; }
 
-/* floating edit button for photo (moved outside avatar-wrap but inside avatar-area) */
 .edit-foto-floating{
-  position:absolute;
-  right:-6px;
-  bottom:-6px;
-  z-index:20;
-  width:30px;
-  height:30px;
-  border-radius:50%;
-  background:#3E8BFF;
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:14px;
-  border:2px solid #fff;
-  cursor:pointer;
+  position:absolute;right:-6px;bottom:-6px;
+  width:30px;height:30px;border-radius:50%;
+  background:#3E8BFF;color:#fff;display:flex;align-items:center;justify-content:center;
+  border:2px solid #fff;font-size:14px;cursor:pointer;
 }
 .edit-foto-floating input{ display:none; }
 
-/* name handwriting + pencil near name */
 .name-hand{
   font-family:'Caveat',cursive;
-  font-size:18px;
-  color:#111;
-  display:flex;
-  align-items:center;
-  gap:8px;
+  font-size:18px;color:#111;display:flex;align-items:center;gap:8px;
 }
-.edit-ico{ font-size:15px; color:#3E8BFF; cursor:pointer; }
+.edit-ico{ font-size:15px;color:#3E8BFF;cursor:pointer; }
 
-/* username */
 .uname{ font-size:13px;color:#666; }
 
-/* role tag (color inline per role) */
 .role-tag{
-  margin-left:auto;
-  padding:6px 10px;
-  border-radius:10px;
-  font-weight:700;
-  font-size:12px;
-  white-space:nowrap;
+  margin-left:auto;padding:6px 10px;border-radius:10px;
+  font-weight:700;font-size:12px;white-space:nowrap;
 }
 
-/* save foto button */
-#saveFotoBtn{ display:none; margin:12px 16px; padding:10px;border-radius:10px;border:0;background:#16a34a;color:#fff;font-weight:700; }
-
-/* popup, fullview, toast */
-.popup-bg, #popupPassBg, #optionBg{
-  position:fixed; inset:0; background:rgba(0,0,0,0.42); display:none; justify-content:center; align-items:center; z-index:60;
+/* popup background */
+.popup-bg{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.42);
+  display:none;justify-content:center;align-items:center;
+  z-index:9999;
 }
-.popup-box, .option-box{
-  background:#fff;padding:18px;border-radius:12px;width:86%;max-width:360px;text-align:center;
+
+/* popup preview */
+.popup-box{
+  background:#fff;border-radius:12px;width:86%;max-width:360px;
+  padding:0;overflow:hidden;
   box-shadow:0 8px 26px rgba(0,0,0,0.16);
 }
-.popup-box input{ width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:10px; }
-#fullView{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.78); z-index:70; }
-#fullView img{ max-width:92%; max-height:92%; border-radius:10px; }
+.popup-box img{ width:100%;display:block; }
 
 /* toast */
 .toast{
-  position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#111; color:#fff; padding:10px 16px; border-radius:999px;
-  opacity:0; pointer-events:none; transition:.25s; z-index:80;
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  background:#111;color:#fff;padding:10px 16px;border-radius:999px;
+  opacity:0;pointer-events:none;transition:.25s;z-index:99999;
 }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
 
-/* ========== NAVBAR EXACT 1:1 (from home.html) ========== */
+/* navbar */
 .navbar{
-  position:fixed;
-  bottom:0;left:0;right:0;
-  background:#fff;
-  display:flex;
-  justify-content:space-around;
-  padding:8px 0 6px;
+  position:fixed;bottom:0;left:0;right:0;background:#fff;
+  display:flex;justify-content:space-around;padding:8px 0 6px;
   border-top:1px solid #e6e6e6;
-  box-shadow:0 -3px 10px rgba(0,0,0,0.06);
-  z-index:999;
 }
 .nav-item{
-  display:flex; flex-direction:column; align-items:center;
-  font-size:11px; font-weight:600; padding:6px 12px;
-  border-radius:16px; cursor:pointer; color:#6a6a6a; transition:.15s;
+  display:flex;flex-direction:column;align-items:center;
+  font-size:11px;font-weight:600;color:#6a6a6a;cursor:pointer;
 }
-.nav-item img{ width:28px; height:28px; margin-bottom:4px; opacity:.65; transition:.15s; }
-.nav-active{ background:rgba(62,139,255,0.12); color:#3E8BFF !important; }
-.nav-active img{ opacity:1 !important; }
+.nav-item img{ width:28px;height:28px;margin-bottom:4px;opacity:.65; }
+.nav-active{ background:rgba(62,139,255,0.12);color:#3E8BFF!important; }
+.nav-active img{ opacity:1!important; }
 
-/* bounce animation */
+/* bounce */
 .bounce{ animation:bounceTap .25s ease-out; }
-@keyframes bounceTap{ 0%{transform:scale(1)} 40%{transform:scale(.92)} 100%{transform:scale(1)} }
-
+@keyframes bounceTap{
+ 0%{transform:scale(1)}40%{transform:scale(.92)}100%{transform:scale(1)}
+}
 </style>
 </head>
 
 <body>
 
-
 <!-- INFO -->
 <div class="info-card">
-  <img src="/assets/logo2.png" class="logo" alt="logo">
+  <img src="/assets/logo.png" class="logo">
   <div class="info-text">
     <div style="font-weight:700">BIG Motor Tingkulu</div>
     <div style="font-size:13px;color:#666;margin-top:6px">
@@ -225,49 +159,24 @@ body{
 <!-- USER LIST -->
 <div class="userlist" id="userlist"></div>
 
-<!-- SAVE FOTO -->
-<button id="saveFotoBtn" onclick="uploadFotoFinal()">Simpan Foto</button>
-
-
-<!-- OPTION POPUP -->
-<div id="optionBg" class="popup-bg">
-  <div class="option-box">
-    <h3>Pilih Aksi</h3>
-    <button id="optNama" style="width:100%;padding:10px;margin-top:8px;background:#3E8BFF;color:#fff;border:0;border-radius:8px;">Ganti Nama</button>
-    <button id="optPass" style="width:100%;padding:10px;margin-top:8px;background:#6b7280;color:#fff;border:0;border-radius:8px;">Ganti Password</button>
-    <button style="width:100%;padding:10px;margin-top:8px;background:#ef4444;color:#fff;border:0;border-radius:8px;" onclick="closeOption()">Batal</button>
-  </div>
-</div>
-
-<!-- NAME POPUP -->
-<div id="popupBg" class="popup-bg">
+<!-- PREVIEW FOTO -->
+<div id="previewFotoBg" class="popup-bg">
   <div class="popup-box">
-    <h3>Ganti Nama</h3>
-    <input id="popupInput" type="text" placeholder="Nama baru">
-    <button id="popupSave" style="width:100%;padding:10px;margin-top:12px;background:#3E8BFF;color:#fff;border:0;border-radius:8px;">Simpan</button>
-    <button style="width:100%;padding:10px;margin-top:8px;background:#ef4444;color:#fff;border:0;border-radius:8px;" onclick="closePopup()">Batal</button>
-  </div>
-</div>
-
-<!-- PASS POPUP -->
-<div id="popupPassBg" class="popup-bg">
-  <div class="popup-box">
-    <h3>Ganti Password</h3>
-    <input id="popupPass" type="password" placeholder="Password baru">
-    <button style="width:100%;padding:10px;margin-top:12px;background:#3E8BFF;color:#fff;border:0;border-radius:8px;" onclick="savePassword()">Simpan</button>
-    <button style="width:100%;padding:10px;margin-top:8px;background:#ef4444;color:#fff;border:0;border-radius:8px;" onclick="closePassPopup()">Batal</button>
+    <img id="previewFotoImg" src="">
+    <button onclick="uploadFotoFinal()" style="width:100%;padding:12px;background:#16a34a;color:#fff;border:0;font-weight:700;">Simpan</button>
+    <button onclick="closePreviewFoto()" style="width:100%;padding:12px;background:#ef4444;color:#fff;border:0;font-weight:700;margin-top:4px;">Batal</button>
   </div>
 </div>
 
 <!-- FULL IMAGE -->
-<div id="fullView" onclick="closeFullImg()">
-  <img id="fullImg" src="">
+<div id="fullView" class="popup-bg" style="background:rgba(0,0,0,0.78);" onclick="closeFullImg()">
+  <img id="fullImg" src="" style="max-width:92%;max-height:92%;border-radius:10px;">
 </div>
 
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
 
-<!-- NAVBAR — EXACT 1:1 from home.html -->
+<!-- NAVBAR -->
 <div class="navbar">
   <div class="nav-item" onclick="bounceThenNavigate(this,'home.html')">
     <img src="assets/beranda.png">Beranda
@@ -278,23 +187,15 @@ body{
   <div class="nav-item" onclick="bounceThenNavigate(this,'riwayat.html')">
     <img src="assets/riwayat.png">Riwayat
   </div>
-  <div class="nav-item nav-active" id="navPengaturan" onclick="bounceThenNavigate(this,'pengaturan.html')">
-    <img src="assets/pengaturan.png">Fitur
+  <div class="nav-item nav-active" id="navPengaturan">
+    <img src="assets/pengaturan.png">Pengaturan
   </div>
 </div>
 
-
-<!-- POPUP PREVIEW FOTO BARU -->
-<div id="previewFotoBg" class="popup-bg">
-  <div class="popup-box" style="padding:0;overflow:hidden">
-      <img id="previewFotoImg" src="" style="width:100%;height:auto;display:block;">
-      <button onclick="uploadFotoFinal()" style="width:100%;padding:12px;background:#16a34a;color:#fff;border:0;font-weight:700;font-size:15px">Simpan Foto</button>
-      <button onclick="closePreviewFoto()" style="width:100%;padding:12px;background:#ef4444;color:#fff;border:0;font-weight:700;margin-top:4px">Batal</button>
-  </div>
-</div>
 <script>
-    
-/* ====== Render & logic (minimal, only necessary) ====== */
+/* ===========================================================
+   LOAD USERS
+=========================================================== */
 async function loadUsers(){
   try{
     const r = await fetch(API_BASE + "/api/users");
@@ -302,7 +203,6 @@ async function loadUsers(){
     renderUsers(j.users || []);
   }catch(e){
     showToast("Gagal memuat pengguna");
-    console.error(e);
   }
 }
 
@@ -315,13 +215,19 @@ function roleColor(role){
   return "#666";
 }
 
-let pendingFile=null, pendingId=null;
+let pendingFile = null;
+let pendingId = null;
+
+/* ===========================================================
+   RENDER USERS
+=========================================================== */
 function renderUsers(list){
   const me = localStorage.getItem("username");
-  const root = document.getElementById("userlist");
+  const root = $("userlist");
   root.innerHTML = "";
+
   list.forEach(u=>{
-    const isMe = (u.username === me);
+    const isMe = u.username === me;
     const foto = u.foto || `/assets/${u.username}.jpg`;
     const clr = roleColor(u.role);
 
@@ -331,32 +237,38 @@ function renderUsers(list){
       ${isMe ? '<div class="tagyou">YOU</div>' : ''}
       <div class="avatar-area">
         <div class="avatar-wrap">
-          <img id="pfp_${u.id}" src="${foto}" alt="">
+          <img id="pfp_${u.id}" src="${foto}">
         </div>
-        ${isMe ? `<label class="edit-foto-floating" onclick="event.stopPropagation()">
-          <input type="file" accept="image/*" onchange="previewFoto(event, ${u.id})">
-          ✎
-        </label>` : ''}
+        ${isMe ? `
+          <label class="edit-foto-floating" onclick="event.stopPropagation()">
+            <input type="file" accept="image/*" onchange="previewFoto(event, ${u.id})">
+            ✎
+          </label>` : ''}
       </div>
+
       <div style="flex:1">
         <div class="name-hand">
           ${u.nama || u.username}
-          ${isMe ? `<span class="edit-ico" style="margin-left:8px" onclick="event.stopPropagation(); openOption(${u.id});">✎</span>` : ''}
+          ${isMe ? `<span class="edit-ico" onclick="event.stopPropagation(); openOption(${u.id});">✎</span>` : ''}
         </div>
         <div class="uname">@${u.username}</div>
       </div>
+
       <div class="role-tag" style="color:${clr};border:1px solid ${clr}33;background:${clr}11;">
         ${u.role}
       </div>
     `;
-    div.addEventListener("click", ()=> openFullImg(foto));
+    div.onclick = ()=> openFullImg(foto);
+
     root.appendChild(div);
 
     if(isMe) localStorage.setItem("userid", u.id);
   });
 }
 
-/* preview before upload */
+/* ===========================================================
+   PREVIEW FOTO — BELUM UPLOAD
+=========================================================== */
 function previewFoto(e,id){
   const f = e.target.files[0];
   if(!f) return;
@@ -364,29 +276,40 @@ function previewFoto(e,id){
   pendingFile = f;
   pendingId = id;
 
-  const url = URL.createObjectURL(f);
-
-  // tampilkan popup preview
-  document.getElementById("previewFotoImg").src = url;
-  document.getElementById("previewFotoBg").style.display = "flex";
+  $("previewFotoImg").src = URL.createObjectURL(f);
+  $("previewFotoBg").style.display = "flex";
 }
 
-/* upload */
-async function uploadFotoFinal(){
-  if(!pendingFile){ showToast("Tidak ada foto"); return; }
+function closePreviewFoto(){
+  pendingFile = null;
+  pendingId = null;
+  $("previewFotoBg").style.display = "none";
+}
 
-  // Tutup popup
-  document.getElementById("previewFotoBg").style.display="none";
+/* ===========================================================
+   UPLOAD FOTO — HANYA SAAT SIMPAN
+=========================================================== */
+async function uploadFotoFinal(){
+  if(!pendingFile){
+    showToast("Tidak ada foto");
+    return;
+  }
 
   const fd = new FormData();
   fd.append("file", pendingFile);
   fd.append("upload_preset", CLOUDINARY_PRESET);
 
   try{
+    // Upload ke Cloudinary
     const up = await fetch(CLOUDINARY_UPLOAD,{method:"POST",body:fd});
     const img = await up.json();
-    if(!img.secure_url){ showToast("Upload gagal"); return; }
 
+    if(!img.secure_url){
+      showToast("Upload gagal");
+      return;
+    }
+
+    // Update DB
     await fetch(API_BASE + "/api/user/foto/" + pendingId, {
       method:"PUT",
       headers:{"Content-Type":"application/json"},
@@ -398,6 +321,8 @@ async function uploadFotoFinal(){
     pendingFile = null;
     pendingId = null;
 
+    $("previewFotoBg").style.display = "none";
+
     loadUsers();
 
   }catch(err){
@@ -406,45 +331,25 @@ async function uploadFotoFinal(){
   }
 }
 
-function closePreviewFoto(){
-  pendingFile = null;
-  pendingId = null;
-  document.getElementById("previewFotoBg").style.display = "none";
+/* ===========================================================
+   FULL IMAGE
+=========================================================== */
+function openFullImg(url){
+  $("fullImg").src = url;
+  $("fullView").style.display = "flex";
 }
-
-/* full image */
-function openFullImg(url){ document.getElementById("fullImg").src = url; document.getElementById("fullView").style.display="flex"; }
-function closeFullImg(){ document.getElementById("fullView").style.display="none"; }
-
-/* option menu */
-function openOption(id){
-  document.getElementById("optionBg").style.display="flex";
-  document.getElementById("optNama").onclick = ()=> { closeOption(); openNamePopup(id); };
-  document.getElementById("optPass").onclick = ()=> { closeOption(); openPassPopup(id); };
-}
-function closeOption(){ document.getElementById("optionBg").style.display="none"; }
-
-/* name popup */
-function openNamePopup(id){
-  document.getElementById("popupBg").style.display="flex";
-  document.getElementById("popupSave").onclick = ()=> saveName(id);
-}
-async function saveName(id){
-  const v = document.getElementById("popupInput").value.trim();
-  if(!v){ showToast("Nama kosong"); return; }
-  await fetch(API_BASE + "/api/user/name/" + id, { method:"PUT", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ nama:v }) });
-  showToast("Nama diperbarui"); closePopup(); loadUsers();
-}
-function closePopup(){ document.getElementById("popupBg").style.display="none"; }
-
-/* password popup */
-function openPassPopup(){ document.getElementById("popupPassBg").style.display="flex"; }
-async function savePassword(){ const p = document.getElementById("popupPass").value.trim(); if(!p){ showToast("Password kosong"); return; } const id = localStorage.getItem("userid"); await fetch(API_BASE + "/api/user/password/" + id, { method:"PUT", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ password:p }) }); showToast("Password diperbarui"); closePassPopup(); }
-function closePassPopup(){ document.getElementById("popupPassBg").style.display="none"; }
+function closeFullImg(){ $("fullView").style.display="none"; }
 
 /* toast */
-function showToast(m){ const t = document.querySelector(".toast"); t.textContent = m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1700); }
+function showToast(m){
+  const t = $("toast");
+  t.textContent = m;
+  t.classList.add("show");
+  setTimeout(()=> t.classList.remove("show"),1700);
+}
 
+/* name, pass */
+function openOption(){}
 
 </script>
 
