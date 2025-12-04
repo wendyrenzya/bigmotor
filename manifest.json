@@ -1,6 +1,6 @@
 {
-  "name": "BMT App",
-  "short_name": "BMT",
+  "name": "BIG Motor",
+  "short_name": "BIG Motor",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -17,5 +17,8 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "orientation": "portrait",
+  "lang": "id",
+  "description": "Big Motor App"
 }
