@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Struk 58mm – No Border</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  body{
+    margin:0;
+    background:#f2f3f5;
+    font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+    color:#000;
+  }
+
+  .page{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px;
+    gap:20px;
+  }
+
+  .controls{
+    width:100%;
+    max-width:520px;
+    display:flex;
+    gap:10px;
+  }
+
+  .btn{
+    flex:1;
+    padding:12px;
+    border-radius:10px;
+    border:0;
+    font-weight:700;
+    cursor:pointer;
+    font-size:14px;
+  }
+
+  .btn.primary{background:#000;color:#fff}
+  .btn.ghost{background:#fff;border:1px solid #bfbfbf}
+  .btn.warn{background:#e8e8e8}
+
+  .preview-wrap{
+    background:#fff;
+    padding:40px 34px;
+    border-radius:14px;
+    box-shadow:0 6px 16px rgba(0,0,0,0.12);
+  }
+
+  /* KERTAS STRUK TANPA BORDER KIRI */
+  .paper{
+    width:384px;
+    margin:0 auto;
+    padding:0 20px; 
+    color:#000;
+    font-size:13px;
+    line-height:1.35;
+    filter:grayscale(100%);
+    font-family:"Courier New", monospace;
+  }
+
+  .center{text-align:center}
+  .logo{
+    height:56px;
+    display:block;
+    margin:8px auto 12px;
+    object-fit:contain;
+    filter:grayscale(100%);
+  }
+
+  .shop{font-weight:800;font-size:16px}
+  .meta{font-size:12px;color:#444;margin-top:4px}
+
+  .line{height:1px;background:#ccc;margin:10px 0}
+
+  .items{padding:4px}
+  .item{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    border-bottom:1px dashed #c4c4c4;
+  }
+  .item .left{max-width:70%}
+  .item .name{font-weight:700}
+  .item .sub{font-size:12px;color:#666;margin-top:4px}
+
+  .totals{
+    display:flex;
+    justify-content:space-between;
+    font-weight:800;
+    padding:6px 0;
+  }
+
+  .note{font-size:12px;color:#666;margin-top:6px}
+  .small{font-size:12px;color:#777;margin-top:10px;text-align:center}
+
+  .footer{
+    font-size:12px;
+    color:#555;
+    margin-top:14px;
+    text-align:center;
+    line-height:1.4;
+  }
+
+  @media print{
+    body{background:#fff}
+    .controls{display:none}
+    .preview-wrap{padding:0;box-shadow:none}
+    .page{padding:0}
+  }
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+  <div class="controls">
+    <button class="btn primary" id="btnSendPDF">Send PDF</button>
+    <button class="btn ghost" id="btnSavePDF">Save PDF</button>
+    <button class="btn warn" id="btnTXT">Versi TXT</button>
+  </div>
+
+  <div class="preview-wrap">
+    <div id="paper" class="paper">
+
+      <img id="logoImg" class="logo" src="assets/logo.png">
+
+      <div class="center shop" id="sShop">Memuat...</div>
+      <div class="center meta" id="sMeta">—</div>
+
+      <div class="line"></div>
+
+      <div class="items" id="sItems"></div>
+
+      <div class="line"></div>
+
+      <div class="totals"><div>Subtotal</div><div id="sSubtotal">-</div></div>
+      <div class="totals"><div>Diskon</div><div id="sDiscount">-</div></div>
+      <div class="totals" style="font-size:15px;margin-top:6px">
+        <div>Total</div><div id="sTotal">-</div>
+      </div>
+
+      <div class="note" id="sNote"></div>
+
+      <div class="small">Terima kasih atas transaksi Anda</div>
+
+      <div class="footer">
+        Bengkel BIG Motor<br>
+        Jl. Tololiu Supit, Tingkulu-Wanea, Manado 95117<br>
+        bigmotortingkulu.com<br>
+        082296880060
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+const API_BASE="https://api.bigmotor.biz.id";
+const $=id=>document.getElementById(id);
+const tid=new URL(location.href).searchParams.get("tid");
+
+function currency(n){return "Rp "+Number(n||0).toLocaleString("id-ID");}
+function isoLocal(s){
+  try{return new Date(s).toLocaleString("id-ID",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});}
+  catch{return s}
+}
+
+async function getNamaBarang(id){
+  try{
+    const r=await fetch(`${API_BASE}/api/barang/${id}`);
+    const j=await r.json();
+    return j.item?.nama||("Barang #"+id);
+  }catch{return "Barang #"+id;}
+}
+
+async function loadStruk(){
+  if(!tid){$("sShop").textContent="ID tidak valid";return;}
+
+  try{
+    const r=await fetch(`${API_BASE}/api/riwayat/${tid}`);
+    const j=await r.json();
+
+    $("sShop").textContent="BIG Motor Tingkulu";
+
+    let rows=[],subtotal=0,discount=0,note="";
+
+    if(tid.startsWith("SRV-")){
+      let list=[];
+      try{
+        const r2=await fetch(`${API_BASE}/api/servis`);
+        const j2=await r2.json();
+        list=j2.items||[];
+      }catch{}
+
+      const core=tid.replace(/^SRV-|^CHG-/,"");
+
+      const main=list.find(
+        x=>x.transaksi_id?.startsWith("SRV-") &&
+        x.transaksi_id.replace(/^SRV-|^CHG-/,"")==core
+      ) || {};
+
+      $("sMeta").textContent=`Oleh: ${main.dibuat_oleh||"-"} • ${isoLocal(main.created_at)}`;
+
+      let arr=[];
+      try{arr=JSON.parse(main.items||"[]");}catch{}
+      for(const b of arr){
+        const nama=await getNamaBarang(b.id||b.barang_id);
+        const qty=Number(b.qty||b.jumlah||0);
+        const price=Number(b.harga||0);
+        subtotal+=qty*price;
+        rows.push({nama,sub:"Barang Dipakai",qty,price});
+      }
+
+      const bs=Number(main.biaya_servis||0);
+      if(bs>0){subtotal+=bs;rows.push({nama:"Biaya Servis",sub:"Layanan",qty:1,price:bs});}
+
+      const charges=list.filter(
+        x=>x.transaksi_id?.startsWith("CHG-") &&
+        x.transaksi_id.replace(/^SRV-|^CHG-/,"")==core
+      );
+      for(const c of charges){
+        const t=Number(c.biaya_servis||0);
+        if(t>0){subtotal+=t;rows.push({nama:c.nama_servis,sub:"Charge",qty:1,price:t});}
+      }
+
+      note=main.catatan||"";
+    }
+
+    else{
+      const who=j.keluar?.[0]?.dibuat_oleh ||
+                j.masuk?.[0]?.dibuat_oleh ||
+                j.audit?.[0]?.dibuat_oleh ||
+                "Admin";
+
+      const waktu=j.keluar?.[0]?.created_at ||
+                  j.masuk?.[0]?.created_at ||
+                  j.audit?.[0]?.created_at;
+
+      $("sMeta").textContent=`Oleh: ${who} • ${isoLocal(waktu)}`;
+
+      for(const r of j.keluar||[]){
+        const nama=await getNamaBarang(r.barang_id);
+        subtotal+=r.jumlah*r.harga;
+        rows.push({nama,sub:r.keterangan||"",qty:r.jumlah,price:r.harga});
+      }
+
+      note=j.keluar?.[0]?.keterangan||"";
+    }
+
+    $("sNote").textContent=note;
+
+    const box=$("sItems");
+    box.innerHTML="";
+    rows.forEach(x=>{
+      const d=document.createElement("div");
+      d.className="item";
+      d.innerHTML=`
+        <div class="left">
+          <div class="name">${x.nama}</div>
+          <div class="sub">${x.sub}</div>
+        </div>
+        <div>${x.qty} × ${currency(x.price)}</div>`;
+      box.appendChild(d);
+    });
+
+    $("sSubtotal").textContent=currency(subtotal);
+    $("sDiscount").textContent=currency(discount);
+    $("sTotal").textContent=currency(subtotal-discount);
+
+  }catch{
+    $("sShop").textContent="Gagal memuat";
+  }
+}
+
+async function imgToBase64(el){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.crossOrigin="anonymous";
+    img.onload=()=>{
+      const c=document.createElement("canvas");
+      c.width=img.width;c.height=img.height;
+      c.getContext("2d").drawImage(img,0,0);
+      resolve(c.toDataURL("image/png"));
+    };
+    img.onerror=()=>reject();
+    img.src=el.src;
+  });
+}
+
+function openPrintPreview(blob){
+  const url=URL.createObjectURL(blob);
+  const w=window.open("");
+  if(!w){alert("Pop-up diblokir");return;}
+  w.document.write(`
+    <img src="${url}" style="width:100%;display:block;margin:0 auto"
+         onload="setTimeout(()=>print(),200)">
+  `);
+}
+
+async function renderReceipt(scale){
+  const paper=$("paper");
+  const logo=$("logoImg");
+  const orig=logo.src;
+
+  try{
+    if(!orig.startsWith("data:")){
+      logo.src=await imgToBase64(logo);
+      await new Promise(r=>setTimeout(r,80));
+    }
+  }catch{}
+
+  try{
+    const canvas=await html2canvas(paper,{scale,useCORS:true,backgroundColor:"#fff"});
+    const blob=await new Promise(r=>canvas.toBlob(r,"image/png",0.92));
+    openPrintPreview(blob);
+  }catch(e){
+    alert("Gagal PDF: "+e.message);
+  }finally{
+    logo.src=orig;
+  }
+}
+
+$("btnSavePDF").onclick=()=>renderReceipt(3);
+
+$("btnSendPDF").onclick=async()=>{
+  try{
+    const paper=$("paper");
+    const canvas=await html2canvas(paper,{scale:2,useCORS:true,backgroundColor:"#fff"});
+    const blob=await new Promise(r=>canvas.toBlob(r,"image/png",0.92));
+    const file=new File([blob],`struk-${tid}.png`,{type:"image/png"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:"Struk"});
+    }else openPrintPreview(blob);
+  }catch(e){
+    alert("Gagal share");
+  }
+};
+
+$("btnTXT").onclick=()=>{
+  const shop=$("sShop").textContent.trim();
+  const meta=$("sMeta").textContent.trim();
+  const items=[...document.querySelectorAll(".item")].map(it=>{
+    const n=it.querySelector(".name").textContent.trim();
+    const s=it.querySelector(".sub").textContent.trim();
+    const q=it.lastElementChild.textContent.trim();
+    return `${n}${s?" ("+s+")":""}\n  ${q}`;
+  }).join("\n\n");
+
+  const subtotal=$("sSubtotal").textContent.trim();
+  const total=$("sTotal").textContent.trim();
+  const note=$("sNote").textContent.trim();
+
+  const txt =
+`${shop}
+${meta}
+
+${items}
+
+Subtotal: ${subtotal}
+Total: ${total}
+
+Catatan:
+${note}
+`;
+
+  const blob=new Blob([txt],{type:"text/plain"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`struk-${tid}.txt`;
+  a.click();
+};
+
+loadStruk();
+</script>
+
+</body>
+</html>

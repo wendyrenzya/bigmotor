@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pengeluaran — BIG Motor Tingkulu</title>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root{
+    --bg:#ffffff;
+    --card:#f7f8fb;
+    --muted:#666;
+    --primary:#1e88e5;
+    --danger:#c62828;
+    --text:#1b1b1b;
+  }
+
+  body{
+    margin:0;
+    font-family:Inter,Segoe UI,Roboto,Arial;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:120px;
+  }
+
+  /* PATCH HEADER IMAGE */
+  .header-wrap{
+    position:relative;
+  }
+  .header-icon{
+    position:absolute;
+    right:14px;
+    top:50%;
+    transform:translateY(-50%);
+    width:60px;
+    height:auto;
+    z-index:5;
+  }
+
+  .header{
+    background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+    padding:14px 16px;
+    text-align:left;
+    position:sticky;top:0;z-index:20;
+    border-bottom:1px solid #e6eefc;
+    padding-right:90px;
+  }
+  .h-title{font-size:18px;font-weight:800;}
+  .h-sub{font-size:14px;font-weight:600;color:var(--muted);margin-top:2px;}
+  .h-time{font-size:13px;color:var(--muted);margin-top:6px;}
+
+  .container{padding:14px;}
+
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  select,input[type=date],input[type=month]{
+    padding:8px 10px;border-radius:8px;border:1px solid #e6eefc;background:white;
+    color:var(--text);font-size:14px;
+  }
+
+  .chart-wrap{display:flex;justify-content:center;margin-top:12px;}
+  #pieChart{max-width:220px;max-height:220px;}
+
+  .list-item{
+    background:var(--card);
+    border-radius:12px;
+    padding:12px;
+    margin-top:12px;
+    box-shadow:0 1px 4px rgba(20,30,60,0.05);
+  }
+  .muted{color:var(--muted);font-size:13px;}
+  .row-between{display:flex;justify-content:space-between;align-items:center;}
+
+  .btn-danger{
+    background:var(--danger);border:none;color:white;
+    padding:8px 10px;border-radius:8px;font-size:14px;
+  }
+
+  .fab{
+    position:fixed;right:18px;bottom:18px;width:56px;height:56px;border-radius:50%;
+    background:var(--primary);color:white;border:none;font-size:28px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;z-index:50;
+    box-shadow:0 6px 20px rgba(30,136,229,0.18);
+  }
+
+  .fab-home{
+    position:fixed;left:18px;bottom:18px;width:58px;height:58px;border-radius:50%;
+    background:#ffffff;
+    border:none; border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.28);
+    z-index:50;
+  }
+  .fab-home img{
+  width:26px;
+  height:26px;
+  opacity:0.85;
+}
+
+/* Modal background */
+.modal-bg{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
+  .modal-box{
+    background:white;border-radius:12px;padding:14px;width:92%;max-width:480px;
+    max-height:75vh;overflow-y:auto;box-shadow:0 10px 40px rgba(20,30,60,0.12);
+  }
+  label{font-size:13px;color:var(--muted);}
+
+  input, textarea{
+    width:100%;padding:8px 10px;border-radius:8px;border:1px solid #e6eefc;font-size:14px;
+    margin-top:6px;box-sizing:border-box;background:white;color:var(--text);
+  }
+  textarea{min-height:70px;resize:vertical;}
+
+  #kategori-box{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid #e6eefc;
+    border-radius:8px;
+    margin-top:6px;
+    background:white;
+    font-size:14px;
+    box-sizing:border-box;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  #kategori-popup{
+    position:fixed;inset:0;background:rgba(0,0,0,.45);
+    display:none;align-items:center;justify-content:center;z-index:9999;
+  }
+  #kategori-popup .inner{
+    background:#fff;width:90%;max-width:360px;border-radius:14px;
+    padding:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);
+  }
+  .kategori-item{
+    padding:12px 4px;
+    font-size:15px;
+    border-bottom:1px solid #eee;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .kategori-item:last-child{border-bottom:none;}
+
+  .btn-save{
+    width:100%;padding:12px;margin-top:14px;background:var(--primary);
+    border:none;border-radius:10px;color:white;font-weight:700;font-size:16px;
+  }
+
+  .confirm-bg{
+    position:fixed;inset:0;background:rgba(0,0,0,0.35);
+    display:none;align-items:center;justify-content:center;z-index:200;
+  }
+  .confirm-box{
+    background:white;border-radius:10px;padding:14px;width:88%;max-width:360px;
+    box-shadow:0 8px 28px rgba(0,0,0,0.12);
+  }
+  .confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;}
+
+</style>
+
+<script src="app.js"></script>
+<script src="navigationGuard.js"></script>
+</head>
+
+<body>
+
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">Pengeluaran</div>
+    <div id="headerTime" class="h-time"></div>
+
+    <img src="assets/pengeluaran.png" class="header-icon">
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="row">
+    <select id="filter" onchange="applyFilter()">
+      <option value="bulan">Bulan Ini</option>
+      <option value="hari">Hari Ini</option>
+      <option value="tanggal">Pilih Tanggal</option>
+      <option value="bulan_manual">Pilih Bulan</option>
+    </select>
+
+    <input id="tanggalFilter" type="date" style="display:none" onchange="applyFilter()">
+    <input id="bulanFilter" type="month" style="display:none" onchange="applyFilter()">
+
+    <div style="flex:1"></div>
+    <div class="muted">Total: <span id="totalTxt">Rp 0</span></div>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="pieChart"></canvas>
+  </div>
+
+  <div id="list" style="margin-top:20px"></div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal-box">
+
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong>Tambah Pengeluaran</strong>
+      <button onclick="closeModal()" style="background:none;border:none;font-size:18px;color:var(--muted)">✕</button>
+    </div>
+
+    <div>
+      <label>Nama</label>
+      <input id="inp-nama" type="text" autocomplete="off" autocorrect="off"
+        autocapitalize="off" spellcheck="false" inputmode="text" placeholder="Contoh: Beli bensin">
+    </div>
+
+    <div style="margin-top:10px">
+      <label>Kategori</label>
+
+      <div id="kategori-box" onclick="openKategoriPopup()">
+        <span id="kategori-text"></span>
+        <span style="opacity:0.6">▼</span>
+      </div>
+      <input type="hidden" id="inp-kategori">
+
+    </div>
+
+    <div style="margin-top:10px">
+      <label>Jumlah</label>
+      <div style="position:relative">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-weight:700;color:#444;">Rp</span>
+        <input id="inp-jumlah" type="text" autocomplete="off" autocorrect="off"
+          autocapitalize="off" spellcheck="false" inputmode="numeric" style="padding-left:38px" placeholder="0">
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
+      <label>Catatan</label>
+      <textarea id="inp-catatan" autocomplete="off" autocorrect="off"
+        autocapitalize="off" spellcheck="false" placeholder="Opsional"></textarea>
+    </div>
+
+    <button class="btn-save" onclick="savePengeluaran()">Simpan</button>
+
+  </div>
+</div>
+
+<div id="kategori-popup">
+  <div class="inner">
+    <div style="font-weight:800;font-size:16px;margin-bottom:12px">Pilih Kategori</div>
+    <div id="kategori-list"></div>
+    <button onclick="closeKategoriPopup()" style="margin-top:16px;width:100%;padding:10px;border-radius:10px;
+      border:none;background:#c54f4d;color:#fff;font-weight:700;">Tutup</button>
+  </div>
+</div>
+
+<div class="confirm-bg" id="confirm">
+  <div class="confirm-box">
+      <div id="confirm-text">Konfirmasi?</div>
+      <div class="confirm-actions">
+        <button onclick="confirmCancel()" style="background:#f3f5f8;border:1px solid #e6eefc;padding:8px 10px;border-radius:8px">Batal</button>
+        <button id="confirm-yes" style="background:var(--danger);padding:8px 10px;border:none;border-radius:8px;color:white">Hapus</button>
+      </div>
+  </div>
+</div>
+
+<button class="fab" onclick="openModal()">+</button>
+<button class="fab-home" onclick="guardedNavigate('home.html')"><img src="assets/beranda.png"></button>
+
+<script>
+let allData=[];
+let pieChart=null;
+let pendingDeleteId=null;
+
+const KATEGORIES=["Operasional","Stok Masuk","Jatuh Tempo","Lain-lain"];
+
+function populateCategories(){
+  const hid=document.getElementById("inp-kategori");
+  const txt=document.getElementById("kategori-text");
+  if(!hid.value){
+    hid.value=KATEGORIES[0];
+    txt.textContent=KATEGORIES[0];
+  }
+}
+
+function fmtWaktu(s){
+  const d = new Date(s);
+  const tgl = d.toLocaleDateString("id-ID", {
+    day:"2-digit",
+    month:"short",
+    year:"numeric"
+  }).replace(".", "");
+
+  const jam = d.toLocaleTimeString("id-ID", {
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+
+  return `${tgl} • ${jam}`;
+}
+
+function openKategoriPopup(){
+  const root=document.getElementById("kategori-list");
+  root.innerHTML="";
+
+  KATEGORIES.forEach(k=>{
+    const div=document.createElement("div");
+    div.className="kategori-item";
+    div.textContent=k;
+
+    div.onclick=()=>{
+      document.getElementById("inp-kategori").value=k;
+      document.getElementById("kategori-text").textContent=k;
+      closeKategoriPopup();
+    };
+
+    root.appendChild(div);
+  });
+
+  document.getElementById("kategori-popup").style.display="flex";
+}
+
+function closeKategoriPopup(){
+  document.getElementById("kategori-popup").style.display="none";
+}
+
+function updateHeaderTime(){
+  const d=new Date();
+  document.getElementById("headerTime").textContent=
+    d.toLocaleString("id-ID",{day:"2-digit",month:"short",year:"numeric"})+
+    " • "+d.toLocaleString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+updateHeaderTime(); setInterval(updateHeaderTime,10000);
+
+function fmtRp(v){v=Number(v||0);return "Rp "+v.toLocaleString("id-ID");}
+function escapeHtml(s){return String(s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function openModal(){
+  document.getElementById("inp-nama").value="";
+  document.getElementById("inp-jumlah").value="";
+  document.getElementById("inp-jumlah").dataset.raw="";
+  document.getElementById("inp-catatan").value="";
+  document.getElementById("modal").style.display="flex";
+  populateCategories();
+}
+function closeModal(){document.getElementById("modal").style.display="none";}
+
+function askDelete(id){
+  pendingDeleteId=id;
+  document.getElementById("confirm-text").innerText="Hapus pengeluaran ini?";
+  document.getElementById("confirm").style.display="flex";
+}
+function confirmCancel(){
+  pendingDeleteId=null;
+  document.getElementById("confirm").style.display="none";
+}
+
+async function confirmDelete(){
+  const id=pendingDeleteId;
+  pendingDeleteId=null;
+  document.getElementById("confirm").style.display="none";
+  if(!id)return;
+  const r=await apiDELETE("/api/pengeluaran/"+id);
+  if(r&&r.ok){showToast("Dihapus");await loadAll();}
+  else showToast("Gagal menghapus");
+}
+document.getElementById("confirm-yes").onclick=confirmDelete;
+
+async function loadAll(){
+  const r=await apiGET("/api/pengeluaran");
+
+  if(!r || !r.items){
+    showToast("Gagal memuat data");
+    allData=[];
+    renderList([]);
+    renderPie([]);
+    renderTotal([]);
+    return;
+  }
+
+  allData=r.items;
+  applyFilter();
+}
+
+function applyFilter(){
+  const mode=document.getElementById("filter").value;
+  const tglI=document.getElementById("tanggalFilter");
+  const blnI=document.getElementById("bulanFilter");
+
+  tglI.style.display=(mode==="tanggal")?"inline-block":"none";
+  blnI.style.display=(mode==="bulan_manual")?"inline-block":"none";
+
+  const now=new Date();
+  let data=[];
+
+  if(mode==="hari"){
+    const d=now.toISOString().slice(0,10);
+    data=allData.filter(x=>x.created_at.slice(0,10)===d);
+  }else if(mode==="tanggal"){
+    if(!tglI.value){renderList([]);renderPie([]);renderTotal([]);return;}
+    data=allData.filter(x=>x.created_at.slice(0,10)===tglI.value);
+  }else if(mode==="bulan_manual"){
+    if(!blnI.value){renderList([]);renderPie([]);renderTotal([]);return;}
+    data=allData.filter(x=>x.created_at.slice(0,7)===blnI.value);
+  }else{
+    const month=now.toISOString().slice(0,7);
+    data=allData.filter(x=>x.created_at.slice(0,7)===month);
+  }
+
+  renderList(data);
+  renderPie(data);
+  renderTotal(data);
+}
+
+function renderList(data){
+  const root=document.getElementById("list");
+  root.innerHTML="";
+
+  if(!data.length){
+    root.innerHTML='<div class="muted">Tidak ada data.</div>';
+    return;
+  }
+
+  data.forEach(it=>{
+    const div=document.createElement("div");
+    div.className="list-item";
+    div.innerHTML=`
+      <div class="row-between">
+        <div>
+          <div style="font-weight:700">${escapeHtml(it.nama)}</div>
+          <div class="muted">Kategori: ${escapeHtml(it.kategori||"-")}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:800">${fmtRp(it.jumlah)}</div>
+          <div class="muted" style="font-size:12px">${fmtWaktu(it.created_at)}</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;text-align:right">
+        <button class="btn-danger" onclick="askDelete(${it.id})">Hapus</button>
+      </div>
+    `;
+    root.appendChild(div);
+  });
+}
+
+function renderPie(data){
+  const map={};
+  data.forEach(x=>{
+    const k=x.kategori||"Lain-lain";
+    map[k]=(map[k]||0)+Number(x.jumlah||0);
+  });
+
+  const labels=Object.keys(map);
+  const values=Object.values(map);
+
+  if(pieChart)pieChart.destroy();
+
+  const ctx=document.getElementById("pieChart");
+  pieChart=new Chart(ctx,{
+    type:"pie",
+    data:{labels,datasets:[{data:values}]},
+    options:{
+      plugins:{
+        legend:{position:"bottom"},
+        tooltip:{callbacks:{label:(c)=>`${c.label}: ${fmtRp(c.parsed)}`}}
+      },
+      maintainAspectRatio:false
+    }
+  });
+}
+
+function renderTotal(data){
+  const sum=data.reduce((a,b)=>a+Number(b.jumlah||0),0);
+  document.getElementById("totalTxt").innerText=fmtRp(sum);
+}
+
+document.getElementById("inp-jumlah").addEventListener("input",e=>{
+  let raw=e.target.value.replace(/\D+/g,"");
+  e.target.dataset.raw=raw;
+  e.target.value=raw.replace(/\B(?=(\d{3})+(?!\d))/g,".");
+});
+
+async function savePengeluaran(){
+  const nama=document.getElementById("inp-nama").value.trim();
+  const kategori=document.getElementById("inp-kategori").value;
+
+  const raw=document.getElementById("inp-jumlah").dataset.raw;
+  const fallback=document.getElementById("inp-jumlah").value.replace(/\D+/g,"");
+  const jumlah = Number(raw || fallback || 0);
+
+  const catatan=document.getElementById("inp-catatan").value.trim();
+
+  if(!nama || jumlah <= 0){
+    showToast("Nama dan jumlah wajib");
+    return;
+  }
+
+  const body={nama,kategori,jumlah,catatan,dibuat_oleh:"Admin"};
+  const r=await apiPOST("/api/pengeluaran",body);
+
+  if(r&&r.ok){
+    showToast("Tersimpan");
+    closeModal();
+    await loadAll();
+  }
+}
+
+(async function(){
+  populateCategories();
+  await loadAll();
+})();
+</script>
+
+</body>
+</html></body>
+</html>

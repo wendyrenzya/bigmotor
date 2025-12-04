@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tambah Servis • BigMotor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#f6f8fb;--card:#fff;--muted:#6b7280;
+  --primary:#1976f7;--accent:#3E8BFF;
+  --success:#2ecc71;--danger:#ff3b30;
+  --radius:14px;--shadow:0 8px 20px rgba(0,0,0,.07);
+}
+
+*{
+  box-sizing:border-box;margin:0;padding:0;
+  font-family:Inter,-apple-system,system-ui;
+  -webkit-tap-highlight-color: transparent;
+}
+body{background:var(--bg);padding:16px;color:#111;-webkit-font-smoothing:antialiased}
+
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;text-align:center;
+  border-bottom:1px solid #e6eefc;margin-bottom:16px;
+}
+.h-title{font-size:18px;font-weight:800;}
+.h-sub{font-size:14px;font-weight:600;color:#666;margin-top:2px;}
+.h-time{font-size:13px;color:#666;margin-top:6px;}
+
+.card{
+  background:var(--card);padding:16px;border-radius:14px;
+  box-shadow:var(--shadow);margin-top:16px;
+}
+.summary-title{font-weight:800;margin-bottom:10px}
+.summary-empty{padding:20px;text-align:center;color:var(--muted)}
+.table-header,.table-row{display:flex;padding:10px 6px}
+.table-header{font-weight:800;border-bottom:1px solid #e8e8e8}
+.col-name{flex:2}
+.col-price,.col-qty,.col-sub{flex:1;text-align:center}
+.col-action{width:80px;text-align:right}
+
+#btnCancel,#btnStart,#btnAdd{
+  padding:10px 18px;border-radius:999px;font-weight:800;border:0;
+}
+#btnCancel{background:#fff;border:1px solid #e3e3e3}
+#btnStart{background:var(--primary);color:#fff}
+#btnAdd{background:var(--accent);color:#fff;margin:12px 0}
+
+/* Popup + card style identical to penjualan */
+.popup{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;justify-content:center;align-items:flex-start;
+  z-index:9000;padding-top:40px;
+}
+.popup-inner{
+  background:#fff;width:94%;max-width:700px;border-radius:14px;
+  padding:0;max-height:86vh;overflow:auto;position:relative;
+}
+.popup-header{
+  position:sticky;top:0;z-index:12;background:#fff;
+  display:flex;align-items:center;gap:8px;
+  padding:12px;border-bottom:1px solid #eee;
+}
+.search-input{
+  flex:1;padding:10px;border-radius:10px;
+  border:1px solid #dcdcdc;font-size:15px;
+}
+.close-top{
+  border:0;background:#fff;border-radius:8px;
+  padding:8px 10px;cursor:pointer;
+  box-shadow:0 6px 12px rgba(0,0,0,.06)
+}
+.popup-content{padding:14px}
+
+.hl{color:var(--primary);font-weight:700}
+
+.prod-card{
+  background:#fff;border-radius:14px;border:1px solid #e5e5e5;
+  margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden
+}
+.card-header{
+  font-weight:800;font-size:15px;padding:10px 14px;background:#f9fafc;
+  border-bottom:1px solid #e6e6e6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.card-body{
+  padding:12px;display:grid;grid-template-columns:auto 1fr auto;
+  gap:8px;align-items:center;position:relative
+}
+.thumb{
+  width:60px;height:50px;border-radius:10px;background:#eee;
+  background-size:cover;background-position:center
+}
+
+.qty-wrap{display:none;align-items:center;gap:6px}
+.qty-circle{
+  width:28px;height:28px;border-radius:999px;border:1px solid #ccc;
+  background:#fff;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:16px;cursor:pointer
+}
+.qty-num{min-width:28px;text-align:center;font-weight:800;font-size:15px}
+
+.right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.price-line{display:flex;align-items:center;gap:6px}
+.price-text{font-weight:800;font-size:15px}
+
+.pencil{
+  padding:6px 8px;font-size:14px;cursor:pointer;border-radius:8px;
+  background:#f3f7ff;border:1px solid #e6eefc;
+}
+
+.total-row{
+  margin-top:12px;padding:10px 12px;background:#f8fbff;
+  border-top:1px solid #e3e8ef;display:none;
+  align-items:center;grid-column:1 / span 3;justify-content:space-between
+}
+.total-left{display:flex;align-items:center;gap:8px}
+.ok-btn{
+  padding:8px 16px;border-radius:999px;background:var(--success);
+  color:#fff;font-weight:800;border:0;cursor:pointer;
+}
+.total-label{font-weight:800;color:var(--primary)}
+
+.bottom-sheet{
+  position:fixed;left:0;right:0;bottom:-240px;
+  background:#fff;border-radius:16px 16px 0 0;
+  padding:20px;box-shadow:0 -6px 20px rgba(0,0,0,.15);
+  transition:.3s;z-index:15000
+}
+.bottom-sheet.show{bottom:0}
+.sheet-btn{
+  padding:12px 18px;border-radius:999px;border:0;
+  font-weight:800;cursor:pointer
+}
+.sheet-btn.cancel{background:#fff;border:1px solid #ddd}
+.sheet-btn.ok{background:var(--success);color:#fff;margin-left:auto}
+
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.36);
+  display:none;align-items:center;justify-content:center;z-index:21000
+}
+.confirm-box{
+  background:#fff;padding:16px;border-radius:12px;
+  min-width:300px;box-shadow:0 12px 30px rgba(0,0,0,.12)
+}
+.confirm-row{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+.confirm-btn{
+  padding:10px 16px;border-radius:999px;border:0;font-weight:800;cursor:pointer
+}
+.confirm-btn.cancel{background:#fff;border:1px solid #ddd}
+.confirm-btn.ok{background:var(--primary);color:#fff}
+
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:22px;background:#111;color:#fff;
+  padding:10px 14px;border-radius:999px;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;
+  z-index:26000
+}
+.toast.show{
+  opacity:1;transform:translateX(-50%) translateY(-6px);
+  pointer-events:auto
+}
+
+.edit-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.36);display:none;
+  align-items:center;justify-content:center;z-index:20000;
+}
+.edit-box{
+  background:#fff;padding:14px;border-radius:12px;min-width:300px;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+}
+.edit-input{
+  width:100%;padding:10px;border-radius:12px;border:1px solid #ddd;
+  font-size:15px;margin-bottom:12px;
+}
+</style>
+</head>
+
+<body>
+<script>
+    function autoCapSpecial(str){
+  if(!str) return "";
+
+  const special = /^([A-Za-z]{2})\s([0-9]{3,4})\s([A-Za-z]{2,3})$/;
+
+  if(special.test(str.trim())){
+    return str.toUpperCase();
+  }
+
+  return str.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// FORMAT & PARSE RUPIAH
+function formatRupiahInput(value){
+  // keep only digits
+  let number = String(value || "").replace(/[^0-9]/g, "");
+  if(!number) return "";
+  // format with locale thousands separator
+  return "Rp " + Number(number).toLocaleString("id-ID");
+}
+
+function getRawNumber(value){
+  // return numeric value (0 if empty)
+  return Number(String(value || "").replace(/[^0-9]/g,"")) || 0;
+}
+
+
+  const token = localStorage.getItem("token");
+  if (!token) location.href = "index.html";
+</script>
+<div class="header">
+  <div class="h-title">BIG Motor Tingkulu</div>
+  <div class="h-sub">Input Servis Baru</div>
+  <div id="headerTime" class="h-time"></div>
+</div>
+
+<div class="card">
+  <div class="summary-title">Masukkan Detail</div>
+
+  <label style="font-weight:700">Nama Customer/Plat Nomor/Tipe Kendaraan</label>
+  <input id="namaServis" autocomplete="off" autocorrect="off" autocapitalize="off"
+    spellcheck="false" style="width:100%;padding:10px;border-radius:10px;
+    border:1px solid #ddd;margin-top:6px;margin-bottom:12px;font-size:15px">
+
+  <label style="font-weight:700">Teknisi</label>
+  <input id="teknisi" autocomplete="off" autocorrect="off" autocapitalize="off"
+    spellcheck="false" style="width:100%;padding:10px;border-radius:10px;
+    border:1px solid:#ddd;margin-top:6px;margin-bottom:12px;font-size:15px">
+
+  <label style="font-weight:700">Biaya Servis (Boleh kosong dulu)</label>
+  <input id="biayaManual" inputmode="numeric" autocomplete="off" autocorrect="off"
+    autocapitalize="off" spellcheck="false"
+    style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;
+    margin-top:6px;margin-bottom:12px;font-size:15px">
+
+  <label style="font-weight:700">Catatan</label>
+  <textarea id="catatan" autocomplete="off" autocorrect="off" autocapitalize="off"
+    spellcheck="false" style="width:100%;padding:10px;border-radius:10px;
+    border:1px solid #ddd;margin-top:6px;height:90px;margin-bottom:12px;font-size:15px"></textarea>
+
+  <button id="btnAdd" class="btnAdd" style="width:100%;margin-top:10px;margin-bottom:14px">
+    Tambah Barang Servis
+  </button>
+
+  <div class="summary-title">Barang Dipakai</div>
+  <div id="summary" class="summary-empty">Belum ada item.</div>
+
+  <div style="margin-top:12px;font-weight:700">
+    TOTAL SERVIS: <span id="grandTotal">Rp 0</span>
+  </div>
+
+  <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+    <button id="btnCancel" class="btnCancel">Batal</button>
+    <button id="btnStart" class="btnStart">Mulai Servis</button>
+  </div>
+</div>
+
+<!-- POPUP BARANG -->
+<div id="popup" class="popup">
+  <div class="popup-inner">
+    <div class="popup-header">
+      <input id="search" class="search-input"
+        placeholder="Cari barang..."
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button id="closeTop" class="close-top">✕</button>
+    </div>
+    <div class="popup-content"><div id="list"></div></div>
+  </div>
+</div>
+
+<!-- EDIT HARGA -->
+<div id="editOverlay" class="edit-overlay">
+  <div class="edit-box">
+    <h4 style="margin-bottom:8px">Edit Harga</h4>
+    <input id="editPriceInput" class="edit-input" inputmode="numeric">
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="editCancel" class="confirm-btn cancel">Batal</button>
+      <button id="editSave" class="confirm-btn ok">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET -->
+<div id="sheet" class="bottom-sheet">
+  <div class="bottom-sheet-title">
+    ✔ <span id="sheetCount"></span> barang dipilih
+  </div>
+  <div class="bottom-sheet-sub">Total = <span id="sheetTotal"></span></div>
+  <div style="display:flex;gap:10px">
+    <button id="sheetCancel" class="sheet-btn cancel">Batal</button>
+    <button id="sheetOk" class="sheet-btn ok">OK</button>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div id="confirmOverlay" class="confirm-overlay">
+  <div class="confirm-box">
+    <div id="confirmText">Yakin?</div>
+    <div class="confirm-row">
+      <button id="confirmNo" class="confirm-btn cancel">Tidak</button>
+      <button id="confirmYes" class="confirm-btn ok">Ya</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API_BASE="https://api.bigmotor.biz.id";
+
+function autoCapWords(str){
+  return str.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+["namaServis","teknisi"].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  el.addEventListener("input", ()=>{
+    const pos = el.selectionStart;
+    el.value = autoCapSpecial(el.value);
+    el.setSelectionRange(pos, pos);
+  });
+});
+
+/* =/* === FORMAT RUPIAH REALTIME (FIXED CARET) === */
+const biayaEl = document.getElementById("biayaManual");
+
+biayaEl.addEventListener("input", (e) => {
+  const el = e.target;
+
+  // Ambil semua digit sebelum formatting
+  const digitsBefore = el.value.replace(/[^0-9]/g, "");
+
+  // Hitung berapa banyak digit di kiri caret SEBELUM formatting
+  const caretIndex = el.selectionStart;
+  const leftPart = el.value.slice(0, caretIndex);
+  const digitsLeftCount = leftPart.replace(/[^0-9]/g, "").length;
+
+  // Format menjadi Rp 12.345 dst.
+  el.value = formatRupiahInput(digitsBefore);
+
+  // Pulihkan caret berdasarkan jumlah digit tadi
+  let newCaretPos = 0;
+  let digitPassed = 0;
+  for (let i = 0; i < el.value.length; i++) {
+    if (/\d/.test(el.value[i])) {
+      digitPassed++;
+      if (digitPassed === digitsLeftCount + 1) {
+        newCaretPos = i + 1;
+        break;
+      }
+    }
+  }
+
+  // Jika caret tidak dapat dihitung (misalnya tipe erase), fallback ke akhir
+  if (newCaretPos === 0) newCaretPos = el.value.length;
+
+  try { el.setSelectionRange(newCaretPos, newCaretPos); } catch(e){}
+});
+
+biayaEl.addEventListener("paste", (e) => {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData("text") || "";
+  const digits = text.replace(/[^0-9]/g, "");
+  biayaEl.value = formatRupiahInput(digits);
+  try { biayaEl.setSelectionRange(biayaEl.value.length, biayaEl.value.length); } catch(e){}
+});
+
+const $=id=>document.getElementById(id);
+
+let ITEMS=[];
+let CART={};
+let openCard=null;
+let editingContext=null;
+let defaultPrices={};
+
+function currency(n){return "Rp "+Number(n||0).toLocaleString("id-ID")}
+function escapeHtml(s){return String(s||"").replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','\'':'&#39;'}[c]));}
+function escapeAttr(s){return String(s||"").replace(/["']/g,"");}
+
+function updateHeaderTime(){
+  const d=new Date();
+  $("headerTime").textContent=
+    d.toLocaleString("id-ID",{day:"2-digit",month:"short",year:"numeric"})+
+    " • "+d.toLocaleString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+updateHeaderTime();
+setInterval(updateHeaderTime,10000);
+
+/* LOAD BARANG */
+async function loadItems(){
+  const r=await fetch(API_BASE+"/api/barang");
+  const j=await r.json();
+  ITEMS=j.items||[];
+  defaultPrices={};
+  ITEMS.forEach(b=>defaultPrices[b.id]=b.harga);
+}
+
+/* RENDER LIST */
+function fuzzyScoreAndHighlight(name,q){
+  if(!q) return {score:1,html:escapeHtml(name)};
+  const nl=name.toLowerCase(),ql=q.toLowerCase();
+  let i=0,j=0,parts=[],buf="";
+  while(i<nl.length&&j<ql.length){
+    if(nl[i]===ql[j]){
+      if(buf){parts.push({t:name.substr(i-buf.length,buf.length),m:false});buf="";}
+      parts.push({t:name[i],m:true}); i++; j++;
+    } else { buf+=name[i]; i++; }
+  }
+  if(buf) parts.push({t:name.substr(name.length-buf.length),m:false});
+  if(i<nl.length) parts.push({t:name.substr(i),m:false});
+  if(j<ql.length){
+    const idx=nl.indexOf(ql);
+    if(idx===-1) return{score:0,html:escapeHtml(name)};
+    return{
+      score:1,
+      html:`${escapeHtml(name.slice(0,idx))}<span class="hl">${escapeHtml(name.slice(idx,idx+ql.length))}</span>${escapeHtml(name.slice(idx+ql.length))}`
+    };
+  }
+  return{
+    score:1,
+    html:parts.map(p=>p.m?`<span class="hl">${escapeHtml(p.t)}</span>`:escapeHtml(p.t)).join("")
+  };
+}
+
+function renderList(q=""){
+  const wrap=$("list");
+  wrap.innerHTML="";
+  let arr=ITEMS.slice();
+
+  if(q.trim()){
+    arr=arr.map(b=>{
+      const {score,html}=fuzzyScoreAndHighlight(b.nama||"",q.trim());
+      return {...b,_score:score,_html:html};
+    }).filter(x=>x._score>0).sort((a,b)=>b._score-a._score);
+  }
+
+  if(!arr.length){
+    wrap.innerHTML=`<div style="padding:20px;text-align:center;color:var(--muted)">Tidak ada barang</div>`;
+    return;
+  }
+
+  arr.forEach(b=>{
+    const card=document.createElement("div");
+    card.className="prod-card";
+    card.dataset.id=b.id;
+
+    card.innerHTML=`
+      <div class="card-header">${b._html||escapeHtml(b.nama)}</div>
+      <div class="card-body">
+
+        <div class="thumb" style="background-image:url('${escapeAttr(b.foto||"")}')"></div>
+
+        <div class="qty-wrap">
+          <div class="qty-circle minus">−</div>
+          <div class="qty-num">1</div>
+          <div class="qty-circle plus">+</div>
+        </div>
+
+        <div class="right">
+          <div class="price-line">
+            <div class="price-text">${currency(b.harga)}</div>
+            <div class="pencil">✎</div>
+          </div>
+        </div>
+
+        <div class="total-row">
+          <div class="total-left"><button class="ok-btn">OK</button></div>
+          <div class="total-label">TOTAL: ${currency(b.harga)}</div>
+        </div>
+
+      </div>
+    `;
+
+    const qtyWrap=card.querySelector(".qty-wrap");
+    const minus=card.querySelector(".minus");
+    const plus=card.querySelector(".plus");
+    const qtyNum=card.querySelector(".qty-num");
+    const priceText=card.querySelector(".price-text");
+    const pencil=card.querySelector(".pencil");
+    const totalRow=card.querySelector(".total-row");
+    const totalLabel=card.querySelector(".total-label");
+    const okBtn=card.querySelector(".ok-btn");
+
+    card.addEventListener("click",e=>{
+      if(
+        e.target.closest(".qty-circle")||
+        e.target.closest(".pencil")||
+        e.target.closest(".ok-btn")||
+        e.target.closest(".total-row")
+      ) return;
+      toggleCard(card,b);
+    });
+
+    minus.onclick=e=>{
+      e.stopPropagation();
+      changeQty(b,qtyNum,totalLabel,-1);
+    };
+    plus.onclick=e=>{
+      e.stopPropagation();
+      changeQty(b,qtyNum,totalLabel,+1);
+    };
+
+    pencil.onclick=e=>{
+      e.stopPropagation();
+      openEditDialog(b,priceText,totalLabel,qtyNum,card);
+    };
+
+    okBtn.onclick=e=>{
+      e.stopPropagation();
+      const qty=Number(qtyNum.textContent)||1;
+
+      CART[b.id]={
+        id:b.id,
+        nama:b.nama,
+        qty,
+        price:b.harga,
+        subtotal:qty*b.harga
+      };
+
+      card.querySelector(".card-header").innerHTML=
+        `<span class="ok-done">✔ ${qty}x ${currency(b.harga).replace("Rp ","")} = ${currency(qty*b.harga).replace("Rp ","")}</span>`;
+
+      card.classList.remove("open");
+      qtyWrap.style.display="none";
+      totalRow.style.display="none";
+      pencil.classList.remove("show");
+
+      updateSummary();
+      showSheet();
+    };
+
+    wrap.appendChild(card);
+  });
+}
+
+function toggleCard(card,b){
+  if(openCard && openCard!==card){
+    closeCardUI(openCard,true);
+  }
+  const isOpen=card.classList.contains("open");
+  if(isOpen){
+    closeCardUI(card,true);
+    openCard=null;
+  } else {
+    openCard=card;
+    card.classList.add("open");
+    const qtyWrap=card.querySelector(".qty-wrap");
+    const totalRow=card.querySelector(".total-row");
+    const qtyNum=card.querySelector(".qty-num");
+    const pencil=card.querySelector(".pencil");
+
+    qtyWrap.style.display="flex";
+    totalRow.style.display="flex";
+
+    setTimeout(()=>pencil.classList.add("show"),40);
+
+    totalRow.querySelector(".total-label").textContent=
+      `TOTAL: ${currency((Number(qtyNum.textContent)||1)*b.harga)}`;
+
+    setTimeout(()=>{try{card.scrollIntoView({behavior:"smooth",block:"center"});}catch(e){}},80);
+  }
+}
+
+function closeCardUI(card,restorePrice=false){
+  card.classList.remove("open");
+  card.querySelector(".qty-wrap").style.display="none";
+  card.querySelector(".total-row").style.display="none";
+  card.querySelector(".pencil").classList.remove("show");
+
+  if(restorePrice){
+    const id=card.dataset.id;
+    const b=ITEMS.find(x=>x.id==id);
+    if(b){
+      b.harga=defaultPrices[b.id];
+      const p=card.querySelector(".price-text");
+      if(p) p.textContent=currency(b.harga);
+    }
+  }
+}
+
+function changeQty(b,domQty,totalLabel,delta){
+  let cur=Number(domQty.textContent)||1;
+  cur+=delta; if(cur<1) cur=1;
+  domQty.textContent=cur;
+  totalLabel.textContent=`TOTAL: ${currency(cur*b.harga)}`;
+}
+
+function openEditDialog(b,priceText,totalLabel,qtyNum){
+  editingContext={b,priceText,totalLabel,qtyNum};
+  $("editPriceInput").value=b.harga;
+  $("editOverlay").style.display="flex";
+  setTimeout(()=> $("editPriceInput").focus(),30);
+}
+$("editCancel").onclick=()=>{
+  $("editOverlay").style.display="none";
+  editingContext=null;
+};
+$("editSave").onclick=()=>{
+  if(!editingContext) return;
+  const v=Number($("editPriceInput").value)||0;
+  const {b,priceText,totalLabel,qtyNum}=editingContext;
+  b.harga=v;
+  priceText.textContent=currency(v);
+  const qty=Number(qtyNum.textContent)||1;
+  totalLabel.textContent=`TOTAL: ${currency(qty*v)}`;
+  $("editOverlay").style.display="none";
+  editingContext=null;
+};
+
+/* SUMMARY */
+function updateSummary(){
+  const box=$("summary");
+  const keys=Object.keys(CART);
+
+  if(!keys.length){
+    box.className="summary-empty";
+    box.textContent="Belum ada item.";
+    $("grandTotal").textContent="Rp 0";
+    return;
+  }
+
+  box.className="";
+  box.innerHTML="";
+
+  const head=document.createElement("div");
+  head.className="table-header";
+  head.innerHTML=`
+    <div class="col-name">Nama</div>
+    <div class="col-price">Harga</div>
+    <div class="col-qty">Qty</div>
+    <div class="col-sub">Subtotal</div>
+    <div class="col-action"></div>`;
+  box.appendChild(head);
+
+  let grand=0;
+
+  keys.forEach(id=>{
+    const it=CART[id];
+    grand+=it.subtotal;
+
+    const row=document.createElement("div");
+    row.className="table-row";
+    row.innerHTML=`
+      <div class="col-name">${escapeHtml(it.nama)}</div>
+      <div class="col-price">${currency(it.price)}</div>
+      <div class="col-qty">${it.qty}</div>
+      <div class="col-sub">${currency(it.subtotal)}</div>
+      <div class="col-action">
+        <button class="removeBtn" data-id="${id}">Hapus</button>
+      </div>`;
+    box.appendChild(row);
+  });
+
+  $("grandTotal").textContent=currency(grand);
+
+  /* PATCH: reset harga saat item dihapus */
+  box.querySelectorAll(".removeBtn").forEach(btn=>{
+    btn.onclick=()=>{
+      const id = btn.dataset.id;
+
+      delete CART[id];
+
+      const item = ITEMS.find(x => String(x.id) === String(id));
+      if (item && defaultPrices[item.id] !== undefined) {
+        item.harga = defaultPrices[item.id];
+      }
+
+      updateSummary();
+      renderList($("search").value||"");
+    };
+  });
+}
+
+/* SHEET */
+function showSheet(){
+  const sheet=$("sheet");
+  const keys=Object.keys(CART);
+  let total=0;
+
+  keys.forEach(k=>total+=CART[k].subtotal);
+
+  $("sheetCount").textContent=keys.length;
+  $("sheetTotal").textContent=currency(total);
+
+  sheet.classList.add("show");
+}
+
+$("sheetCancel").onclick=()=>{
+  $("sheet").classList.remove("show");
+  CART={};
+  updateSummary();
+  ITEMS.forEach(b=>b.harga=defaultPrices[b.id]);
+  openCard=null;
+  renderList($("search").value||"");
+  showToast("Dibatalkan");
+};
+
+$("sheetOk").onclick=()=>{
+  $("sheet").classList.remove("show");
+  $("popup").style.display="none";
+  showToast("Barang ditambahkan");
+};
+
+function showToast(msg,ms=1800){
+  const t=$("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),ms);
+}
+
+function showConfirm(msg,yes,no){
+  const o=$("confirmOverlay");
+  $("confirmText").textContent=msg;
+  o.style.display="flex";
+  $("confirmYes").onclick=()=>{o.style.display="none"; yes&&yes();};
+  $("confirmNo").onclick=()=>{o.style.display="none"; no&&no();};
+}
+
+$("closeTop").onclick=()=>{
+  $("editOverlay").style.display="none";
+  editingContext=null;
+  $("popup").style.display="none";
+  ITEMS.forEach(b=>b.harga=defaultPrices[b.id]);
+  openCard=null;
+  renderList($("search").value||"");
+};
+
+$("btnCancel").onclick=()=>{
+  if(Object.keys(CART).length){
+    showConfirm("Batalkan membuat servis?",()=>{
+      CART={};
+      updateSummary();
+      showToast("Dibatalkan");
+    });
+  } else {
+    showConfirm("Keluar dari halaman?",()=>location.href="servis.html");
+  }
+};
+
+/* START SERVIS */
+$("btnStart").onclick = async () => {
+
+  const btn = $("btnStart");
+
+  if (btn.classList.contains("disabled")) return;
+  btn.classList.add("disabled");
+  const originalText = btn.textContent;
+  btn.textContent = "Memulai...";
+
+  const nama = $("namaServis").value.trim();
+  const teknisi = $("teknisi").value.trim();
+  const keys = Object.keys(CART);
+
+  if (!nama) {
+    showToast("Nama wajib diisi");
+    btn.classList.remove("disabled");
+    btn.textContent = originalText;
+    return;
+  }
+
+  if (!teknisi) {
+    showToast("Teknisi wajib diisi");
+    btn.classList.remove("disabled");
+    btn.textContent = originalText;
+    return;
+  }
+
+  /* PATCH: biayaManual diperbaiki */
+ const biaya_manual = getRawNumber($("biayaManual").value);
+ 
+  /* === CORE + SRV safe generators === */
+function genCORE(){
+  return Date.now() + "-" + Math.floor(1000 + Math.random()*9000);
+}
+function genSRV(){
+  return "SRV-" + genCORE();
+}
+
+  const payload={
+    transaksi_id: genSRV(),
+    nama_servis: nama,
+    teknisi: teknisi,
+    biaya_servis: biaya_manual,
+    catatan: $("catatan").value.trim(),
+    dibuat_oleh: localStorage.getItem("username") || "Guest",
+    items: keys.map(id=>({
+      id: Number(id),
+      qty: CART[id].qty,
+      harga: CART[id].price,
+      keterangan: ""
+    }))
+  };
+
+  try {
+    const r = await fetch(API_BASE + "/api/servis", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const j = await r.json().catch(() => ({}));
+
+    if (r.ok && (j.ok === true || j.ok === undefined)) {
+      showToast("Servis dimulai");
+      setTimeout(() => location.href = "servis.html", 900);
+      return;
+    } else {
+      showToast("Gagal menyimpan");
+    }
+
+  } catch (e) {
+    showToast("Gagal menyimpan");
+  }
+
+  btn.classList.remove("disabled");
+  btn.textContent = originalText;
+};
+
+$("btnAdd").onclick=async()=>{
+  await loadItems();
+  renderList();
+  $("popup").style.display="flex";
+};
+
+$("search").oninput=e=>renderList(e.target.value);
+
+(async()=>{
+  await loadItems();
+  updateSummary();
+})();
+</script>
+
+</body>
+</html>

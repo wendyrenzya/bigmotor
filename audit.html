@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Audit Barang</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary:#1976f7;
+  --success:#36C06A;
+  --danger:#e04444;
+  --muted:#777;
+  --bg:#f5f5f5;
+  --card:#fff;
+}
+
+.add-btn-plus{
+  position:fixed;
+  right:18px;
+  bottom:24px;
+  width:56px;
+  height:56px;
+  border-radius:999px;
+  background:#1976f7;
+  color:#fff;
+  font-size:32px;
+  font-weight:800;
+  border:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  z-index:300;
+}
+.add-btn-plus:active{
+  transform:scale(.92);
+}
+
+/* RESET */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  font-family:Inter,Arial;
+  padding-bottom:140px;
+  color:#111;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* HEADER */
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  text-align:left;
+  border-bottom:1px solid #e6eefc;
+  margin-bottom:16px;
+  padding-right:90px; /* PATCH */
+}
+.h-title{font-size:18px;font-weight:800;}
+.h-sub{font-size:14px;font-weight:600;color:#666;margin-top:2px}
+.h-time{font-size:13px;color:#666;margin-top:6px}
+
+/* SUMMARY */
+.container{max-width:900px;margin:16px auto;padding:16px}
+.summary-box{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 6px 16px rgba(0,0,0,.08);
+}
+.summary-title{font-weight:800;font-size:16px;margin-bottom:10px}
+.summary-empty{padding:20px;text-align:center;color:var(--muted)}
+
+#summaryButtons{
+  display:flex;gap:10px;margin-top:16px;justify-content:center
+}
+.btn{
+  padding:12px 18px;
+  border-radius:999px;
+  font-weight:800;
+  border:0;
+  cursor:pointer;
+}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-ghost{background:#fff;border:1px solid #ddd;color:#333}
+
+/* POPUP */
+.popup{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;justify-content:center;align-items:flex-start;
+  padding-top:32px;z-index:10000;
+}
+.popup-inner{
+  background:#fff;width:94%;max-width:780px;height:80vh;
+  border-radius:14px;overflow:auto;
+  box-shadow:0 12px 32px rgba(0,0,0,.25);
+}
+
+.popup-header{
+  position:sticky;top:0;z-index:12;
+  background:#fff;padding:12px;display:flex;gap:10px;
+  border-bottom:1px solid #eee;
+}
+.popup-header input{
+  flex:1;padding:10px;border-radius:10px;border:1px solid #ddd;font-size:15px;
+}
+.close-x{
+  padding:8px 10px;border-radius:8px;
+  background:#fff;border:1px solid #eee;cursor:pointer;
+}
+
+/* ITEM LIST */
+.item-card{
+  background:#fff;border-radius:12px;border:1px solid #eee;
+  padding:12px;margin-bottom:10px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;
+}
+.thumb{
+  width:58px;height:46px;border-radius:10px;
+  background:#f1f1f1 center/cover no-repeat;
+}
+.item-name{font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stock-old{font-weight:800;min-width:50px;text-align:right}
+
+.item-card.open{transform:translateX(-12px)}
+
+.expand-inline{
+  display:inline-flex;align-items:center;gap:8px;margin-left:8px;
+}
+.stock-input{
+  width:46px;padding:6px;border-radius:8px;
+  border:1px solid #ccc;text-align:center;font-weight:800
+}
+.check-btn{
+  padding:7px 10px;background:var(--success);color:#fff;
+  border:0;border-radius:8px;font-weight:800;
+}
+
+/* SUMMARY TABLE */
+.table-header,.table-row{
+  display:flex;padding:10px;
+}
+.table-header{
+  font-weight:800;border-bottom:2px solid #eee;
+}
+.table-row{border-bottom:1px solid #eee}
+.t-name{flex:2}
+.t-change{flex:1;text-align:center}
+.t-status{flex:1;text-align:center}
+
+.badge-check{
+  background:#FFD56E;padding:4px 8px;border-radius:6px;font-weight:800;
+}
+.badge-done{
+  background:var(--success);padding:4px 8px;border-radius:6px;font-weight:800;color:#fff
+}
+
+.check-big{text-align:center;font-size:60px;color:var(--success);padding:20px 0}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:130px;left:50%;transform:translateX(-50%);
+  background:rgba(30,30,30,.92);color:#fff;
+  padding:10px 16px;border-radius:10px;
+  font-weight:800;font-size:13px;opacity:0;
+  pointer-events:none;transition:.25s;z-index:20000
+}
+.toast.show{
+  opacity:1;transform:translateX(-50%) translateY(-6px)
+}
+
+/* CONFIRM */
+#confirmBox{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+  align-items:center;justify-content:center;z-index:30000;
+}
+#confirmInner{
+  background:#fff;width:82%;max-width:360px;
+  border-radius:14px;padding:18px;text-align:center;
+}
+.confirm-row{display:flex;gap:10px;margin-top:14px}
+.confirm-btn{
+  flex:1;padding:10px 16px;border-radius:999px;font-weight:800;border:0;cursor:pointer;
+}
+.confirm-no{background:#fff;border:1px solid #ddd}
+.confirm-yes{background:var(--primary);color:#fff}
+
+/* BOTTOM SHEET */
+#auditSheet{
+  position:fixed;left:0;right:0;bottom:-240px;background:#fff;
+  padding:18px;border-radius:16px 16px 0 0;
+  box-shadow:0 -8px 24px rgba(0,0,0,.18);display:flex;
+  flex-direction:column;gap:14px;text-align:center;
+  z-index:15000;transition:bottom .25s;
+}
+#auditSheet.show{bottom:0}
+.fab-add{
+  position:fixed;
+  right:18px;
+  bottom:24px;
+  width:58px;
+  height:58px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#3E8BFF,#1976f7);
+  color:#fff;
+  font-size:32px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 10px 26px rgba(0,0,0,.22);
+  z-index:12000;
+}
+.fab-add:active{
+  transform:scale(.92);
+}
+.fab-hide{
+  display:none !important;
+}
+.header-wrap{
+  position:relative;
+}
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:60px;
+  height:auto;
+  z-index:5;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">Big Motor Tingkulu</div>
+    <div class="h-sub">Audit Barang</div>
+    <div id="dateTime" class="h-time"></div>
+
+    <img src="assets/audit.png" class="header-icon">
+  </div>
+</div>
+
+<div class="container">
+  <div class="summary-box">
+    <div class="summary-title">Ringkasan Audit</div>
+    <div id="summaryContent" class="summary-empty">Belum ada barang di audit</div>
+
+    <div id="summaryButtons">
+      <button id="summaryCancel" class="btn btn-ghost">Batal</button>
+      <button id="summarySave" class="btn btn-primary">Simpan</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- POPUP LIST -->
+<div id="popupList" class="popup">
+  <div class="popup-inner">
+    <div class="popup-header">
+      <input id="searchBox" placeholder="Cari barang..." />
+      <button id="closePopup" class="close-x">✕</button>
+    </div>
+    <div class="popup-content"><div id="itemList"></div></div>
+  </div>
+</div>
+
+<!-- BOTTOM SHEET -->
+<div id="auditSheet">
+  <div id="auditSheetTitle" style="font-weight:800;font-size:16px">0 barang di audit</div>
+  <div style="display:flex;gap:10px;justify-content:center">
+    <button id="auditSheetCancel" class="btn btn-ghost" style="flex:1">Batal</button>
+    <button id="auditSheetOK" class="btn btn-primary" style="flex:1">Proses</button>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div id="confirmBox">
+  <div id="confirmInner">
+    <div id="confirmMsg"></div>
+    <div class="confirm-row">
+      <button id="confirmNo" class="confirm-btn confirm-no">Tidak</button>
+      <button id="confirmYes" class="confirm-btn confirm-yes">Ya</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+<div id="fabAudit" class="fab-add">+</div>
+
+<script>
+const API_BASE="https://api.bigmotor.biz.id";
+const $=id=>document.getElementById(id);
+if (!localStorage.getItem("token")) {
+    alert("Belum login");
+    location.href = "index.html";
+}
+
+let items=[];
+let auditData={};
+let expanded={};
+
+// CLOCK
+function updateHeaderTime(){
+  const el=$("dateTime");
+  const d=new Date();
+  const hari  = d.toLocaleDateString("id-ID",{day:"2-digit"});
+  const bulan = d.toLocaleDateString("id-ID",{month:"short"});
+  const tahun = d.getFullYear();
+  const jam   = d.getHours().toString().padStart(2,"0");
+  const menit = d.getMinutes().toString().padStart(2,"0");
+  el.textContent=`${hari} ${bulan} ${tahun} • ${jam}.${menit}`;
+}
+updateHeaderTime();
+setInterval(updateHeaderTime,1000);
+
+// TOAST
+function showToast(msg){
+  const t=$("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  clearTimeout(t._x);
+  t._x=setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+// CONFIRM
+function showConfirm(msg,onYes){
+  $("confirmMsg").textContent=msg;
+  $("confirmBox").style.display="flex";
+  $("confirmNo").onclick=()=>{$("confirmBox").style.display="none";}
+  $("confirmYes").onclick=()=>{
+    $("confirmBox").style.display="none";
+    onYes && onYes();
+  }
+}
+
+// LOAD ITEMS
+async function loadItems(){
+  try{
+    const r=await fetch(API_BASE+"/api/barang");
+    const j=await r.json();
+    items=j.items||[];
+  }catch{
+    items=[];
+    showToast("Gagal memuat barang");
+  }
+}
+
+// FUZZY SEARCH
+function fuzzy(t,k){
+  if(!k)return true;
+  t=t.toLowerCase();k=k.toLowerCase();
+  let i=0,j=0;
+  while(i<t.length&&j<k.length){ if(t[i]==k[j])j++; i++; }
+  return j===k.length;
+}
+
+// RENDER LIST
+$("searchBox").oninput=e=>renderList(e.target.value);
+
+function renderList(q){
+  const wrap=$("itemList");
+  wrap.innerHTML="";
+  const k=(q||"").trim();
+
+  const list=k?items.filter(i=>fuzzy(i.nama,k)):items.slice();
+  if(!list.length){
+    wrap.innerHTML="<div style='padding:20px;text-align:center;color:#777'>Tidak ada barang</div>";
+    return;
+  }
+
+  list.forEach(it=>{
+    expanded[it.id]=false;
+
+    const el=document.createElement("div");
+    el.className="item-card";
+    el.dataset.id=it.id;
+
+    el.innerHTML=`
+      <div class="thumb" style="background-image:url('${it.foto||""}')"></div>
+      <div class="item-name">${it.nama}</div>
+      <div class="stock-old" id="stock_${it.id}">${it.stock}</div>
+    `;
+
+    el.onclick=e=>{
+      if(
+        e.target.closest(".expand-inline") ||
+        e.target.closest(".stock-input") ||
+        e.target.closest(".check-btn")
+      ) return;
+
+      expanded[it.id]
+        ? collapseInline(it,el)
+        : openInline(it,el);
+    };
+
+    wrap.appendChild(el);
+  });
+}
+
+// OPEN INLINE
+function openInline(it,card){
+  expanded[it.id]=true;
+  const s=card.querySelector(`#stock_${it.id}`);
+  s.innerHTML=`${it.stock} →`;
+  card.classList.add("open");
+
+  const box=document.createElement("span");
+  box.className="expand-inline";
+
+  const inp=document.createElement("input");
+  inp.className="stock-input";
+  inp.type="number";
+  inp.min=0; inp.max=9999;
+  inp.id="input_"+it.id;
+  inp.onclick=e=>e.stopPropagation();
+  inp.onkeydown=e=>{ if(e.key==="Enter") commitInline(it,card); };
+
+  const ok=document.createElement("button");
+  ok.className="check-btn";
+  ok.textContent="✔";
+  ok.onclick=e=>{ e.stopPropagation(); commitInline(it,card); };
+
+  box.appendChild(inp);
+  box.appendChild(ok);
+  s.parentElement.appendChild(box);
+
+  setTimeout(()=>inp.focus(),80);
+}
+
+// CLOSE INLINE
+function collapseInline(it,card){
+  expanded[it.id]=false;
+  const s=card.querySelector(`#stock_${it.id}`);
+  s.textContent=it.stock;
+  const box=card.querySelector(".expand-inline");
+  if(box) box.remove();
+  card.classList.remove("open");
+}
+
+// COMMIT INLINE
+function commitInline(it,card){
+  const inp=$("input_"+it.id);
+  if(!inp)return;
+
+  const v=Number(inp.value);
+  if(isNaN(v)||v<0){
+    showToast("Angka tidak valid");
+    return;
+  }
+
+  auditData[it.id]={oldStock:it.stock,newStock:v};
+
+  const diff=v-it.stock;
+  const col=diff>0?"var(--success)":diff<0?"var(--danger)":"#444";
+
+  const s=card.querySelector(`#stock_${it.id}`);
+  s.innerHTML=`<span style="font-weight:800;color:${col}">${it.stock} → ${v}</span>`;
+
+  const box=card.querySelector(".expand-inline");
+  if(box) box.remove();
+
+  renderSummary(false);
+  updateAuditSheet();
+}
+
+// RENDER SUMMARY
+function renderSummary(final){
+  const wrap=$("summaryContent");
+  const keys=Object.keys(auditData);
+
+  if(!keys.length){
+    wrap.className="summary-empty";
+    wrap.textContent="Belum ada barang di audit";
+    return;
+  }
+
+  wrap.className="";
+  let html=`
+    <div class="table-header">
+      <div class="t-name">Nama</div>
+      <div class="t-change">${final?"Aktual":"Perubahan"}</div>
+      <div class="t-status">Status</div>
+    </div>
+  `;
+
+  keys.forEach(id=>{
+    const r=auditData[id];
+    const it=items.find(x=>x.id==id)||{nama:"-"};
+
+    const diff=r.newStock-r.oldStock;
+    const col=diff>0?"var(--success)":diff<0?"var(--danger)":"#555";
+    const badge = final ? `<span class="badge-done">Done</span>` : `<span class="badge-check">Check</span>`;
+
+    html+=`
+      <div class="table-row">
+        <div class="t-name">${it.nama}</div>
+        <div class="t-change">${
+          final ? r.newStock :
+          "<span style='font-weight:800;color:"+col+"'>"+r.oldStock+" → "+r.newStock+"</span>"
+        }</div>
+        <div class="t-status">${badge}</div>
+      </div>
+    `;
+  });
+
+  if(final){
+    html+=`<div class="check-big">✔</div>`;
+  }
+
+  wrap.innerHTML=html;
+}
+
+// BOTTOM SHEET UPDATE
+function updateAuditSheet(){
+  const count=Object.keys(auditData).length;
+  if(count===0){ $("auditSheet").classList.remove("show"); return; }
+
+  $("auditSheetTitle").textContent=count+" barang di audit";
+  $("auditSheet").classList.add("show");
+}
+
+// BUTTON BEHAVIOR
+$("auditSheetCancel").onclick=()=>{
+  auditData={};
+  renderSummary(false);
+  $("auditSheet").classList.remove("show");
+  showToast("Audit dibersihkan");
+};
+
+$("auditSheetOK").onclick = () => {
+  $("popupList").style.display = "none";
+  $("auditSheet").classList.remove("show");
+
+  // FAB kembali muncul
+  $("fabAudit").classList.remove("fab-hide");
+
+  showToast("Siap menyimpan");
+
+  setTimeout(()=>{ window.scrollTo({top:0,behavior:"smooth"}); },150);
+};
+
+$("summaryCancel").onclick=()=>{
+  const ada=Object.keys(auditData).length>0;
+
+  if(ada){
+    showConfirm("Hapus seluruh perubahan audit?",()=>{
+      auditData={};
+      renderSummary(false);
+      $("auditSheet").classList.remove("show");
+      showToast("Ringkasan dibersihkan");
+    });
+  }else{
+    showConfirm("Audit kosong. Kembali ke beranda?",()=>location.href="home.html");
+  }
+};
+
+$("summarySave").onclick=()=>{
+  const ada=Object.keys(auditData).length>0;
+  if(!ada){
+    showConfirm("Audit kosong. Kembali ke beranda?",()=>location.href="home.html");
+    return;
+  }
+  saveAll();
+};
+
+// SAVE ALL (FORMAT MULTI-ITEM)
+async function saveAll(){
+  const ids=Object.keys(auditData);
+  const op=localStorage.getItem("username")||"guest";
+
+  const payload={
+    dibuat_oleh:op,
+    items:ids.map(id=>({
+      barang_id:Number(id),
+      stok_baru:auditData[id].newStock,
+      keterangan:""
+    }))
+  };
+
+  try{
+    const r=await fetch(API_BASE+"/api/stok_audit",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify(payload)
+    });
+    const j=await r.json();
+
+    if(!r.ok||!j.ok){
+      showToast("Gagal menyimpan audit");
+      return;
+    }
+
+    showToast("Audit tersimpan");
+    setTimeout(()=>location.href="riwayat.html",600);
+  }catch(e){
+    showToast("Error koneksi");
+  }
+}
+
+// POPUP
+
+ const fab = $("fabAudit");
+
+// klik FAB sama seperti summaryAdd lama
+fab.onclick = async ()=>{
+  fab.classList.add("bounce");
+  setTimeout(()=>fab.classList.remove("bounce"),340);
+
+  await loadItems();
+  renderList("");
+  $("popupList").style.display="flex";
+  
+  // FAB hilang ketika popup muncul
+  fab.classList.add("fab-hide");
+  };
+
+$("closePopup").onclick = () => {
+  const ada = Object.keys(auditData).length > 0;
+
+  if (ada) {
+    showConfirm("Ada perubahan aktif. Batalkan & tutup popup?", () => {
+      auditData = {};
+      renderSummary(false);
+      $("auditSheet").classList.remove("show");
+      showToast("Perubahan dibatalkan");
+      $("popupList").style.display = "none";
+
+      // FAB kembali muncul
+      $("fabAudit").classList.remove("fab-hide");
+    });
+    return;
+  }
+
+  $("popupList").style.display = "none";
+  $("auditSheet").classList.remove("show");
+
+  // FAB kembali muncul
+  $("fabAudit").classList.remove("fab-hide");
+};
+
+// INIT
+(async()=>{
+  await loadItems();
+  renderSummary(false);
+})();
+</script>
+
+</body>
+</html>

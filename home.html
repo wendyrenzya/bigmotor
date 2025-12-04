@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Big Motor Apps — Beranda</title>
+
+<style>
+:root{--card:#fff}
+
+/* HEADER AVATAR */
+.header-avatar{
+  width:48px;height:48px;border-radius:50%;object-fit:cover;
+  position:absolute;right:16px;top:16px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.14);
+}
+
+/* HEADER WRAP */
+.header-wrap{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  padding:0;
+  background:transparent;
+}
+
+/* HEADER CARD */
+.header{
+  background:#ffffff;color:#222;
+  padding:18px 16px;
+  border-radius:16px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.10);
+  position:relative;
+  margin:8px 16px 0 16px;
+}
+
+body{
+  margin:0;
+  padding-bottom:90px;
+  background:#f4f5f7;
+  font-family:Inter,Segoe UI,Roboto;
+  color:#222;
+}
+*{-webkit-tap-highlight-color:transparent}
+
+.user-row{margin-top:6px;font-size:14px;font-weight:500;color:#444;}
+.datetime{font-size:13px;color:#666;}
+
+/* STICKY MESSAGE (scroll normal) */
+.sticky-card{
+  background:var(--card);
+  margin:20px 16px 22px;
+  padding:16px;
+  border-radius:14px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.10);
+  font-weight:600;
+  position:relative;
+  text-align:center;
+}
+
+/* CUSTOM MESSAGE */
+.custom-info-card{
+  background:var(--card);
+  margin:20px 16px 4px;
+  padding:16px;
+  border-radius:16px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.10);
+  font-size:14px;color:#444;
+  line-height:1.5;
+  white-space:pre-line;
+  word-break:break-word;
+  position:relative;
+}
+
+.edit-pen{
+  position:absolute;right:12px;top:12px;
+  font-size:17px;opacity:.55;cursor:pointer;
+}
+
+/* GRID — NO SHADOW CONTAINER */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+  padding:0 16px;
+  margin-top:8px;
+
+  position:sticky;
+  top:95px;
+  z-index:800;
+
+  background:transparent;
+  border-radius:0;
+  box-shadow:none;
+}
+
+/* EACH GRID ITEM — BLUE SOFT SHADOW */
+.menu-item{
+  background:var(--card);
+  border-radius:18px;
+  padding:18px 8px 14px;
+  text-align:center;
+
+  box-shadow:0 6px 6px rgba(62,139,255,0.18);
+}
+
+.menu-item img{width:72px;height:72px;object-fit:contain;}
+.menu-item span{display:block;margin-top:10px;font-size:14px;font-weight:600;color:#111;}
+
+/* PRICE CARDS */
+.price-card{
+  background:var(--card);
+  margin:20px 16px 0;
+  padding:14px;
+  border-radius:16px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.10);
+  display:flex;gap:12px;align-items:flex-start;
+  cursor:pointer;
+}
+.price-card:hover{background:#fafafa}
+
+.price-avatar{
+  width:48px;height:48px;
+  border-radius:12px;
+  background:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+}
+
+.price-avatar img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  background:#fff;
+}
+
+.price-meta{text-align:center;margin-top:4px;font-weight:700;font-size:12px;color:#333;}
+
+.price-title{font-size:15px;font-weight:800;}
+.price-sub{font-size:13px;color:#666;margin-top:6px;}
+
+.red{color:#d50000;font-weight:800;}
+.green{color:#007f00;font-weight:800;}
+.gray{color:#444;font-weight:800;}
+
+/* NAV BAR */
+.navbar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;
+  display:flex;justify-content:space-around;
+  padding:8px 0 6px;
+  border-top:1px solid #e6e6e6;
+  box-shadow:0 -3px 10px rgba(0,0,0,0.06);
+  z-index:999;
+}
+
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;
+  font-size:11px;font-weight:600;
+  padding:6px 12px;
+  border-radius:16px;
+  cursor:pointer;
+  color:#6a6a6a;
+  transition:.15s;
+}
+
+.nav-item img{
+  width:28px;height:28px;margin-bottom:4px;
+  opacity:.65;
+  transition:.15s;
+}
+
+.nav-active{
+  background:rgba(62,139,255,0.12);
+  color:#3E8BFF!important;
+}
+
+.nav-active img{opacity:1!important}
+
+/* POPUP */
+.popup-body{
+  background:#fff;width:92%;max-width:520px;
+  max-height:80vh;overflow-y:auto;
+  border-radius:12px;padding:14px;
+}
+
+/* FIX TEXTAREA */
+textarea{box-sizing:border-box;}
+</style>
+</head>
+
+<body>
+
+<script>
+if(!localStorage.getItem("token")) location.href="index.html";
+window.guardedNavigate=url=>location.href=url;
+</script>
+
+<script src="app.js"></script>
+
+<script>
+const SETTINGS_BASE="https://msg.wendyrenzya.workers.dev";
+</script>
+
+<script>
+function getUserObjPrice(name){
+  try{
+    const us=JSON.parse(localStorage.getItem("appUsers")||"[]");
+    return us.find(u=>u.nama===name||u.username===name)||null;
+  }catch(e){return null}
+}
+function initialsPrice(n){
+  if(!n)return"GM";
+  const p=n.trim().split(" ");
+  if(p.length===1)return p[0].slice(0,2).toUpperCase();
+  return(p[0][0]+p[1][0]).toUpperCase();
+}
+</script>
+
+<script>
+function openEditCustom(){
+  let raw=document.getElementById("customMessage").innerText.trim();
+  raw=raw.replace("✎","").trim();
+  document.getElementById("editCustomInput").value=raw;
+  document.getElementById("editCustomPopup").style.display="flex";
+}
+function openEditSticky(){
+  let raw=document.getElementById("stickyMessage").childNodes[0].textContent.trim();
+  document.getElementById("editStickyInput").value=raw;
+  document.getElementById("editStickyPopup").style.display="flex";
+}
+</script>
+
+<script>
+function parseHargaMessageHome(msg){
+  try{
+    const t=msg.text;
+    const nama=t.match(/\[HARGA\]\s(.+?):/)[1];
+    const hargaLama=Number(t.match(/:\s([\d\.]+)\s→/)[1].replace(/\./g,''));
+    const hargaBaru=Number(t.match(/→\s([\d\.]+)/)[1].replace(/\./g,''));
+    const user=t.match(/\(oleh\s(.+)\)/)[1];
+    const tanggal=new Date(msg.created_at)
+      .toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"});
+    return {nama,hargaLama,hargaBaru,user,tanggal};
+  }catch(e){return null}
+}
+
+function renderPriceCardHome(d){
+  const u=getUserObjPrice(d.user);
+  const foto=u&&u.foto?u.foto:null;
+  const uname=(u&&u.username)?u.username:d.user;
+
+  const naik=d.hargaBaru>d.hargaLama;
+  const turun=d.hargaBaru<d.hargaLama;
+
+  const div=document.createElement("div");
+  div.className="price-card";
+  div.onclick=()=>guardedNavigate("harga.html");
+
+  div.innerHTML=`
+    <div style="text-align:center">
+      <div class="price-avatar">
+        ${foto?`<img src="${foto}">`:`<div class="price-avatar-text">${initialsPrice(uname)}</div>`}
+      </div>
+      <div class="price-meta">${uname}</div>
+    </div>
+
+    <div style="flex:1">
+      <div class="price-title">
+        ${d.nama} ${naik?"naik":(turun?"turun":"tetap")}
+        dari ${d.hargaLama.toLocaleString("id-ID")}
+        menjadi <span class="${naik?"red":(turun?"green":"gray")}">
+          ${d.hargaBaru.toLocaleString("id-ID")}
+        </span>
+      </div>
+      <div class="price-sub">${d.tanggal} • oleh ${d.user}</div>
+    </div>
+  `;
+  return div;
+}
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+
+  document.getElementById("btnCancelEdit").onclick=
+    ()=>document.getElementById("editCustomPopup").style.display="none";
+
+  document.getElementById("btnSaveEdit").onclick=async()=>{
+    let txt=document.getElementById("editCustomInput").value.trim();
+    const user=localStorage.getItem("nama")||"Unknown";
+    const time=new Date().toLocaleString("id-ID");
+
+    try{
+      await fetch(SETTINGS_BASE+"/api/settings/custom",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({message:txt,user,time})
+      });
+
+      document.getElementById("customMessage").innerHTML=
+        `${txt}<span class="edit-pen" onclick="openEditCustom()">✎</span>`;
+      document.getElementById("customMeta").innerHTML=
+        `&lt;by ${user} / ${time}&gt;`;
+
+    }catch(e){}
+
+    document.getElementById("editCustomPopup").style.display="none";
+  };
+
+  document.getElementById("btnStickyCancel").onclick=
+    ()=>document.getElementById("editStickyPopup").style.display="none";
+
+  document.getElementById("btnStickySave").onclick=async()=>{
+    let txt=document.getElementById("editStickyInput").value.trim();
+    if(txt.length>40)txt=txt.slice(0,40);
+
+    const user=localStorage.getItem("nama")||"Unknown";
+    const time=new Date().toLocaleString("id-ID");
+
+    try{
+      await fetch(SETTINGS_BASE+"/api/settings/sticky",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({message:txt,user,time})
+      });
+
+      document.getElementById("stickyMessage").innerHTML=
+        `${txt}<span class="edit-pen" onclick="openEditSticky()">✎</span>`;
+      document.getElementById("stickyMeta").innerHTML=
+        `&lt;by ${user} / ${time}&gt;`;
+
+    }catch(e){}
+
+    document.getElementById("editStickyPopup").style.display="none";
+  };
+});
+</script>
+
+<!-- HEADER -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="user-row"><div id="userName">Hai, Guest</div></div>
+    <div class="datetime" id="dateTimeText">Memuat waktu...</div>
+    <img id="headerUserFoto" class="header-avatar">
+  </div>
+</div>
+
+<!-- Sticky message -->
+<div class="sticky-card" id="stickyMessage" onclick="openEditSticky()">
+  Memuat data...
+  <span class="edit-pen">✎</span>
+</div>
+<div id="stickyMeta" style="font-size:11px;color:#888;text-align:center;margin-top:-10px;margin-bottom:16px;"></div>
+
+<!-- GRID -->
+<div class="grid">
+  <div class="menu-item" onclick="guardedNavigate('penjualan.html')"><img src="assets/jualan.png"><span>Penjualan</span></div>
+  <div class="menu-item" onclick="guardedNavigate('servis.html')"><img src="assets/service.png"><span>Servis</span></div>
+  <div class="menu-item" onclick="guardedNavigate('stok_masuk.html')"><img src="assets/stok_masuk.png"><span>Stok Masuk</span></div>
+  <div class="menu-item" onclick="guardedNavigate('pengeluaran.html')"><img src="assets/pengeluaran2.png"><span>Pengeluaran</span></div>
+  <div class="menu-item" onclick="guardedNavigate('laporan.html')"><img src="assets/laporan.png"><span>Laporan</span></div>
+  <div class="menu-item" onclick="guardedNavigate('audit.html')"><img src="assets/audit2.png"><span>Audit</span></div>
+</div>
+
+<!-- CUSTOM MESSAGE -->
+<div class="custom-info-card" id="customMessage" onclick="openEditCustom()">
+  Memuat data...
+  <span class="edit-pen">✎</span>
+</div>
+<div id="customMeta" style="text-align:center;font-size:11px;color:#888;margin-bottom:16px;"></div>
+
+<!-- PRICE CARDS -->
+<div id="priceCards"></div>
+
+<!-- NAVIGATION -->
+<div class="navbar">
+  <div class="nav-item nav-active" onclick="guardedNavigate('home.html')">
+    <img src="assets/beranda.png">Beranda
+  </div>
+  <div class="nav-item" onclick="guardedNavigate('barang.html')">
+    <img src="assets/barang.png">Barang
+  </div>
+  <div class="nav-item" onclick="guardedNavigate('riwayat.html')">
+    <img src="assets/riwayat.png">Riwayat
+  </div>
+  <div class="nav-item" onclick="guardedNavigate('pengaturan.html')">
+    <img src="assets/pengaturan.png">Pengaturan
+  </div>
+</div>
+<script>
+function loadUser(){
+  const nm=localStorage.getItem("nama")||"Guest";
+  document.getElementById("userName").textContent=`Hai, ${nm}`;
+}
+loadUser();
+
+async function loadHeaderUserFoto(){
+  try{
+    const r=await fetch("https://api.bigmotor.biz.id/api/users");
+    const j=await r.json();
+    const me=localStorage.getItem("username");
+    const u=(j.users||[]).find(x=>x.username===me);
+
+    let foto=u?(u.foto?u.foto:`assets/${u.username}.jpg`):"assets/default.jpg";
+    document.getElementById("headerUserFoto").src=foto;
+
+  }catch(e){
+    document.getElementById("headerUserFoto").src="assets/default.jpg";
+  }
+}
+loadHeaderUserFoto();
+
+function updateClock(){
+  const d=new Date();
+  const hari=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"][d.getDay()];
+  const dd=String(d.getDate()).padStart(2,"0");
+  const bln=d.toLocaleDateString("id-ID",{month:"short"});
+  const yy=String(d.getFullYear()).slice(2);
+  const jam=d.getHours().toString().padStart(2,"0")+"."+d.getMinutes().toString().padStart(2,"0");
+  document.getElementById("dateTimeText").textContent=
+    `${hari} ${dd} ${bln} ${yy} · ${jam}`;
+}
+setInterval(updateClock,1000);updateClock();
+
+async function loadLatestPriceCards(){
+  try{
+    const u=await apiGET("/api/users");
+    localStorage.setItem("appUsers",JSON.stringify(u.users||[]));
+  }catch(e){}
+
+  let logs=[];
+  try{
+    const msg=await apiGET("/api/message");
+    logs=(msg.items||[])
+      .filter(x=>x.text&&x.text.startsWith("[HARGA]"))
+      .slice(0,5);
+  }catch(e){return;}
+
+  const root=document.getElementById("priceCards");
+  root.innerHTML="";
+
+  logs.forEach(x=>{
+    const p=parseHargaMessageHome(x);
+    if(p)root.appendChild(renderPriceCardHome(p));
+  });
+}
+loadLatestPriceCards();
+
+(async()=>{
+  try{
+    const rc=await fetch(SETTINGS_BASE+"/api/settings/custom");
+    const c=await rc.json();
+
+    document.getElementById("customMessage").innerHTML=
+      `${c.message||""}<span class="edit-pen" onclick="openEditCustom()">✎</span>`;
+    document.getElementById("customMeta").innerHTML=
+      `&lt;by ${c.user||"-"} / ${c.time||"-"}&gt;`;
+
+    const rs=await fetch(SETTINGS_BASE+"/api/settings/sticky");
+    const k=await rs.json();
+
+    document.getElementById("stickyMessage").innerHTML=
+      `${k.message||""}<span class="edit-pen" onclick="openEditSticky()">✎</span>`;
+    document.getElementById("stickyMeta").innerHTML=
+      `&lt;by ${k.user||"-"} / ${k.time||"-"}&gt;`;
+
+  }catch(e){}
+})();
+</script>
+
+<!-- POPUP CUSTOM -->
+<div id="editCustomPopup"
+style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.35);
+align-items:center;justify-content:center;">
+  <div class="popup-body">
+    <div style="font-weight:800;font-size:16px;margin-bottom:10px;">Edit Pesan</div>
+
+    <textarea id="editCustomInput" placeholder="Tulis pesan..."
+      style="width:100%;max-height:300px;min-height:120px;overflow:auto;
+      border:1px solid #e6e6e6;border-radius:10px;
+      padding:10px;font-size:14px;resize:none;"></textarea>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
+      <button id="btnCancelEdit"
+        style="padding:8px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;">Batal</button>
+      <button id="btnSaveEdit"
+        style="padding:8px 12px;border-radius:10px;">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP STICKY -->
+<div id="editStickyPopup"
+style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.35);
+align-items:center;justify-content:center;">
+  <div class="popup-body">
+    <div style="font-weight:800;font-size:16px;margin-bottom:10px;">Edit Sticky Message</div>
+
+    <textarea id="editStickyInput" maxlength="40" placeholder="Max 40 karakter"
+      style="width:100%;max-height:200px;min-height:100px;overflow:auto;
+      border:1px solid #e6e6e6;border-radius:10px;
+      padding:10px;font-size:14px;resize:none;"></textarea>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
+      <button id="btnStickyCancel"
+        style="padding:8px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;">Batal</button>
+      <button id="btnStickySave"
+        style="padding:8px 12px;border-radius:10px;">Simpan</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

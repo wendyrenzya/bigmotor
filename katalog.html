@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Katalog — BIG Motor Tingkulu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --bg:#ffffff;
+  --card:#f7f8fb;
+  --muted:#666;
+  --primary:#1e88e5;
+  --danger:#c62828;
+  --text:#1b1b1b;
+}
+
+body{
+  margin:0;
+  font-family:Inter,Segoe UI,Roboto,Arial;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-tap-highlight-color:transparent;
+  padding-bottom:80px;
+  overflow-x:hidden;
+}
+
+/* ===== HEADER (gaya pengeluaran) ===== */
+.header-wrap{ position:relative; }
+.header-icon{
+  position:absolute;
+  right:14px; top:50%;
+  transform:translateY(-50%);
+  width:54px;
+  z-index:5;
+}
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  position:sticky; top:0;
+  border-bottom:1px solid #e6eefc;
+  z-index:20;
+  padding-right:90px;
+}
+.h-title{font-size:18px;font-weight:800;}
+.h-sub{font-size:14px;font-weight:600;color:var(--muted);margin-top:2px;}
+.h-web{font-size:13px;color:var(--muted);margin-top:4px;}
+
+/* ===== CHECKOUT BAR ===== */
+.checkout-bar{
+  position:sticky;
+  top:94px;
+  background:white;
+  border-bottom:1px solid #e6eefc;
+  padding:10px 14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:15;
+}
+.checkout-bar .txt{ font-size:15px;font-weight:700; }
+.checkout-btn{
+  background:var(--primary);
+  color:white;
+  padding:10px 18px;
+  border:none;
+  border-radius:8px;
+  font-size:15px;font-weight:700;
+}
+
+/* ===== GRID ===== */
+.grid{
+  padding:14px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+/* ===== CARD ===== */
+.card{
+  background:white;
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.card img{
+  width:100%; height:130px;
+  object-fit:cover;
+  border-radius:10px;
+  background:#ddd;
+}
+
+.name{ font-size:14px;font-weight:700; }
+.price{ font-size:14px; color:var(--primary); }
+.stock{ font-size:12px;color:#777; }
+
+.addBtn{
+  margin-top:auto;
+  width:100%;
+  padding:8px 0;
+  border-radius:8px;
+  background:var(--primary);
+  color:white;
+  border:none;
+  font-size:14px;
+  font-weight:600;
+}
+
+/* ===== MODERN TOAST ===== */
+.toast{
+  position:fixed;
+  bottom:22px;
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:rgba(33,150,243,0.92);
+  backdrop-filter:blur(6px);
+  padding:12px 18px;
+  color:white;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:600;
+  opacity:0;
+  box-shadow:0 4px 14px rgba(0,0,0,0.22);
+  transition:all .35s ease;
+  z-index:200;
+}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0px);
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">Katalog Barang</div>
+    <div class="h-web">www.bigmotortingkulu.com</div>
+    <img src="assets/logo.png" class="header-icon">
+  </div>
+</div>
+
+<!-- ===== CHECKOUT BAR ===== -->
+<div class="checkout-bar">
+  <div class="txt">Cart: <span id="cartCount">0</span> item</div>
+  <button class="checkout-btn" onclick="checkout()">Checkout</button>
+</div>
+
+<div id="loading" class="loading">Memuat...</div>
+<div id="grid" class="grid" style="display:none;"></div>
+
+<!-- Modern toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+const API_BARANG  = "https://api.bigmotor.biz.id";
+const API_KATALOG = "https://msg.wendyrenzya.workers.dev";
+
+let cart = {};
+
+/* ==========================
+   Modern Toast
+========================== */
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.innerText = msg;
+  t.classList.add("show");
+  setTimeout(()=> t.classList.remove("show"), 1800);
+}
+
+function updateCart(){
+  document.getElementById("cartCount").textContent =
+    Object.keys(cart).length;
+}
+
+/* ADD TO CART */
+function addToCart(b){
+  if(!cart[b.id]) cart[b.id] = { ...b, qty:1 };
+  else cart[b.id].qty++;
+
+  updateCart();
+  toast("Ditambahkan ke keranjang");
+}
+
+/* CHECKOUT */
+function checkout(){
+  if(Object.keys(cart).length === 0){
+    toast("Keranjang kosong");
+    return;
+  }
+
+  let msg = "Order Katalog BIG Motor Tingkulu:%0A%0A";
+  let total = 0;
+
+  Object.values(cart).forEach(b=>{
+    const sub = b.qty * b.harga;
+    total += sub;
+    msg += `${b.nama} — ${b.qty} x ${b.harga.toLocaleString("id-ID")} = ${sub.toLocaleString("id-ID")}%0A`;
+  });
+
+  msg += `%0ATotal: ${total.toLocaleString("id-ID")}`;
+
+  location.href = "https://wa.me/6282296880060?text=" + msg;
+}
+
+/* DATA LOADING */
+async function run(){
+  const p = new URLSearchParams(location.search);
+  const id = p.get("id_katalog");
+
+  if (!id) {
+    document.body.innerHTML = "<h3>ID katalog tidak ditemukan</h3>";
+    return;
+  }
+
+  let katalog;
+  try {
+    const r = await fetch(API_KATALOG + "/api/katalog/" + id);
+    katalog = await r.json();
+  } catch {
+    document.body.innerHTML = "<h3>Error memuat katalog</h3>";
+    return;
+  }
+
+  const selectedIDs = katalog.items || [];
+
+  let all;
+  try {
+    const r2 = await fetch(API_BARANG + "/api/barang");
+    all = await r2.json();
+  } catch {
+    document.body.innerHTML = "<h3>Error memuat barang</h3>";
+    return;
+  }
+
+  const filtered = all.items.filter(x => selectedIDs.includes(x.id));
+
+  const grid = document.getElementById("grid");
+  const loading = document.getElementById("loading");
+
+  loading.style.display = "none";
+  grid.style.display = "grid";
+
+  filtered.forEach(b=>{
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <img src="${b.foto || ''}" onerror="this.src='assets/no_image.png'">
+      <div class="name">${b.nama}</div>
+      <div class="price">Rp${b.harga.toLocaleString("id-ID")}</div>
+      <div class="stock">Stok: ${b.stock}</div>
+      <button class="addBtn">+ Keranjang</button>
+    `;
+
+    div.querySelector(".addBtn").onclick = ()=> addToCart(b);
+
+    grid.appendChild(div);
+  });
+}
+
+run();
+</script>
+
+</body>
+</html>

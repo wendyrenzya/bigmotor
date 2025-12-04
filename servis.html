@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Servis • BigMotor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#f6f8fb;
+  --card:#fff;
+  --muted:#6b7280;
+  --primary:#1976f7;
+  --accent:#3E8BFF;
+  --success:#16a34a;
+  --danger:#ef4444;
+  --warning:#f59e0b;
+  --radius:14px;
+  --shadow:0 12px 26px rgba(0,0,0,.08);
+}
+
+/* ===== PATCH: GAMBAR DI KANAN HEADER ===== */
+.header-wrap{
+  position:relative;
+}
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:60px;
+  height:auto;
+  z-index:5;
+}
+
+.servis-card.st-ongoing{
+  border-left:6px solid #1e40af;
+  background:#eef4ff;
+}
+.servis-card.st-selesai{
+  border-left:6px solid #166534;
+  background:#f0fff4;
+}
+.servis-card.st-batal{
+  border-left:6px solid #b91c1c;
+  background:#fff5f5;
+}
+
+.s-total{
+  font-size:13px;
+  font-weight:800;
+  margin-top:6px;
+  text-align:right;
+  color:#333;
+  white-space:nowrap;
+}
+
+/* RESET */
+*{
+  box-sizing:border-box;
+  margin:0;padding:0;
+  font-family:Inter,system-ui,-apple-system;
+  -webkit-tap-highlight-color:transparent;
+}
+body{
+  background:var(--bg);
+  padding-bottom:100px;
+}
+
+/* HEADER */
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  text-align:left;
+  position:sticky;top:0;z-index:20;
+  border-bottom:1px solid #e6eefc;
+  padding-right:90px; /* ruang agar teks tidak tertutup gambar */
+}
+.h-title{font-size:18px;font-weight:800;}
+.h-sub{font-size:14px;font-weight:600;color:#666;margin-top:2px;}
+.h-time{font-size:13px;color:#666;margin-top:6px}
+
+/* LIST CARD */
+.list-root{
+  padding:14px;
+}
+.servis-card{
+  background:var(--card);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  padding:14px;
+  margin-bottom:14px;
+  cursor:pointer;
+  transition:.18s;
+  display:block;
+}
+
+.card-top{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:10px;
+}
+
+.s-left{
+  flex:1;
+  padding-right:12px;
+}
+.s-price-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  width: 100%;
+  gap:6px;
+  margin-top:6px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.s-price-grid div{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  width:100%;
+  display:block;
+}
+
+.s-price-grid div b{
+  display:block;
+  margin-top:2px;
+}
+
+.s-price-grid div:nth-child(1){ text-align:left; }
+.s-price-grid div:nth-child(2){ text-align:center; }
+.s-price-grid div:nth-child(3){ text-align:right; }
+
+.servis-card:active{transform:scale(.97);}
+.s-title{font-weight:800;font-size:16px;}
+.s-meta{font-size:13px;color:var(--muted);margin-top:4px;}
+.s-status{
+  margin-top:10px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  display:inline-block;
+  text-align:right;
+}
+.servis-right{
+  flex-shrink:0;
+  text-align:right;
+  width:120px;
+  display:flex;
+  justify-content:flex-end;
+}
+
+.st-ongoing{background:#dbeafe;color:#1e40af;}
+.st-selesai{background:#dcfce7;color:#166534;}
+.st-batal{background:#fee2e2;color:#b91c1c;}
+
+/* FAB Tambah Servis */
+.fab-add{
+  position:fixed;
+  right:18px;
+  bottom:30px;
+  background:linear-gradient(135deg,var(--accent),var(--primary));
+  width:58px;height:58px;
+  border-radius:999px;
+  display:flex;justify-content:center;align-items:center;
+  color:#fff;font-size:32px;font-weight:800;
+  box-shadow:0 12px 26px rgba(0,0,0,.18);
+  z-index:200;
+}
+.fab-add:active{transform:scale(.92);}
+
+/* FAB HOME */
+.fab-home{
+  position:fixed;
+  bottom:20px;
+  left:20px;
+  width:54px;
+  height:54px;
+  background:rgba(255,255,255,0.85);
+  border:none;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,0.28);
+  backdrop-filter:blur(4px);
+  cursor:pointer;
+  z-index:200;
+}
+.fab-home img{
+  width:28px;
+  height:28px;
+  object-fit:contain;
+  opacity:0.9;
+}
+/* CONFIRM POPUP */
+.confirm-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;align-items:center;justify-content:center;
+  z-index:30000;
+}
+.confirm-box{
+  background:#fff;padding:16px;border-radius:14px;
+  width:86%;max-width:360px;box-shadow:0 12px 32px rgba(0,0,0,.22);
+}
+.confirm-title{font-weight:800;font-size:16px;margin-bottom:12px;}
+.confirm-row{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;}
+.cbtn{padding:10px 16px;border-radius:999px;font-weight:800;border:0;cursor:pointer;}
+.cbtn.cancel{background:#fff;border:1px solid #ddd;}
+.cbtn.ok{background:var(--primary);color:#fff;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  background:#111;color:#fff;padding:10px 16px;border-radius:999px;
+  opacity:0;pointer-events:none;transition:.25s;z-index:50000;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+</style>
+</head>
+
+<body>
+
+<script>
+  const token = localStorage.getItem("token");
+  if (!token) location.href = "index.html";
+</script>
+
+<!-- PATCH HEADER -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">Data Servis</div>
+    <div id="headerTime" class="h-time"></div>
+
+    <img src="assets/servis.png" class="header-icon">
+  </div>
+</div>
+
+<div id="listRoot" class="list-root">Memuat...</div>
+
+<!-- FAB HOME -->
+<div class="fab-home" onclick="nav('home.html')">
+  <img src="assets/beranda.png">
+</div>
+
+<!-- FAB ADD SERVIS -->
+<div class="fab-add" onclick="goTambah()">+</div>
+
+<!-- CONFIRM -->
+<div id="confirmBg" class="confirm-bg">
+  <div class="confirm-box">
+    <div id="confirmTitle" class="confirm-title">Konfirmasi?</div>
+    <div class="confirm-row">
+      <button class="cbtn cancel" onclick="closeConfirm()">Tidak</button>
+      <button id="confirmYes" class="cbtn ok">Ya</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API_BASE="https://api.bigmotor.biz.id";
+const $=id=>document.getElementById(id);
+
+let page = 0;
+let done = false;
+let loading = false;
+
+function nav(url){ window.location=url; }
+
+function showToast(msg){
+  const t=$("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),1900);
+}
+
+function updateTime(){
+  const d=new Date();
+  $("headerTime").textContent=
+    d.toLocaleString("id-ID",{day:"2-digit",month:"short",year:"numeric"})
+    +" • "+
+    d.toLocaleString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+updateTime(); setInterval(updateTime,10000);
+
+/* LOAD SERVIS */
+async function loadServis(){
+  if(loading || done) return;
+  loading = true;
+
+  if(page === 0){
+    $("listRoot").innerHTML = "Memuat...";
+  }
+
+  try{
+    const r = await fetch(API_BASE + "/api/servis?limit=10&offset=" + (page*10));
+    const j = await r.json();
+    const list = j.items || [];
+    
+    const filtered = list.filter(s=>{
+      const trx = s.transaksi_id;
+      if(trx && String(trx).toUpperCase().startsWith("CHG-")) return false;
+      return true;
+    });
+
+if(page === 0) window.__ALL_SERVIS = list;
+else window.__ALL_SERVIS = [...window.__ALL_SERVIS, ...list];
+
+    if(filtered.length < 10) done = true;
+
+    renderServis(filtered);
+    page++;
+
+  }catch(e){
+    $("listRoot").innerHTML =
+      `<div style="padding:20px;text-align:center;color:#666">Gagal memuat data</div>`;
+  }
+
+  loading = false;
+}
+
+function formatTime(ts){
+  if(!ts) return "-";
+  try{
+    const d = new Date(ts);
+    return d.toLocaleString("id-ID",{
+      day:"2-digit", month:"short", year:"numeric",
+      hour:"2-digit", minute:"2-digit"
+    });
+  }catch{
+    return ts;
+  }
+}
+
+function formatServiceName(str){
+  if(!str) return "";
+  str = String(str).trim();
+  const regex = /^[A-Za-z]{2}\s*\d{2,4}/;
+  return regex.test(str) ? str.toUpperCase() : str;
+}
+
+function getCoreFromTid(tid){
+  return String(tid).replace(/^SRV-|^CHG-/, "");
+}
+
+function renderServis(arr){
+  const root=$("listRoot");
+  if(page === 0) root.innerHTML = "";
+
+  if(!arr.length){
+    root.innerHTML=
+      `<div style="padding:20px;text-align:center;color:#666">Belum ada servis</div>`;
+    return;
+  }
+
+  arr.forEach(s=>{
+
+    const statusClass =
+      s.status==="ongoing" ? "st-ongoing" :
+      s.status==="selesai" ? "st-selesai" :
+      "st-batal";
+
+    const statusText =
+      s.status==="ongoing" ? "Proses" :
+      s.status==="selesai" ? "Selesai" :
+      "Dibatalkan";
+
+    const div=document.createElement("div");
+    div.className = "servis-card " + statusClass;
+    div.onclick=()=>openDetail(s.id_servis);
+
+    let itemsArr=[];
+    try{ itemsArr = JSON.parse(s.items||"[]"); }catch{}
+
+    const totalBarang = itemsArr.reduce((a,b)=> 
+      a + (Number(b.qty||b.jumlah||0)*Number(b.harga||0))
+    ,0);
+
+    const core = String(s.transaksi_id||"").replace(/^SRV-|^CHG-/,"");
+
+ const chargeList = (window.__ALL_SERVIS || []).filter(x =>
+  x.transaksi_id &&
+  x.transaksi_id.toUpperCase().startsWith("CHG-") &&
+  getCoreFromTid(x.transaksi_id) === core
+);
+
+    const totalCharge = chargeList.reduce((a,b)=> 
+      a + Number(b.biaya_servis||0)
+    ,0);
+
+    const biayaServis = Number(s.biaya_servis||0);
+
+div.innerHTML = `
+<div class="card-top">
+  <div class="s-left">
+    <div class="s-title">${formatServiceName(s.nama_servis)}</div>
+    <div class="s-meta">Teknisi: ${s.teknisi||"-"}</div>
+    <div class="s-meta">${formatTime(s.created_at)}</div>
+  </div>
+
+  <div class="servis-right">
+    <div>
+      <div class="s-status ${statusClass}">${statusText}</div>
+      <div class="s-total ${statusClass}">
+        Rp ${(biayaServis + totalCharge + totalBarang).toLocaleString("id-ID")}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="s-price-grid">
+  <div>
+    🙈 Jasa
+    <br>
+    <b>Rp ${biayaServis.toLocaleString("id-ID")}</b>
+  </div>
+
+  <div>
+    🙉 Charge
+    <br>
+    <b>Rp ${totalCharge.toLocaleString("id-ID")}</b>
+  </div>
+
+  <div>
+    🙊 Barang
+    <br>
+    <b>Rp ${totalBarang.toLocaleString("id-ID")}</b>
+  </div>
+</div>
+`;
+
+    root.appendChild(div);
+  });
+}
+
+function openDetail(id){
+  window.location="servis_detail.html?id="+id;
+}
+
+function goTambah(){
+  window.location="tambah_servis.html";
+}
+
+function showConfirm(text,yesFn){
+  $("confirmTitle").textContent=text;
+  $("confirmBg").style.display="flex";
+  $("confirmYes").onclick=()=>{
+    $("confirmBg").style.display="none";
+    yesFn&&yesFn();
+  };
+}
+function closeConfirm(){
+  $("confirmBg").style.display="none";
+}
+
+window.addEventListener("scroll",()=>{
+  if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 200){
+    loadServis();
+  }
+});
+
+loadServis();
+</script>
+
+</body>
+</html>

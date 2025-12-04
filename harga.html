@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Riwayat Perubahan Harga</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary:#3E8BFF;
+  --muted:#6b7280;
+}
+
+body{
+  margin:0;
+  background:#f4f6f9;
+  font-family:Inter,Arial;
+  padding-bottom:100px;
+}
+
+/* HEADER STYLE versi list_katalog */
+.header-wrap{ position:relative; }
+
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  padding-right:90px;
+  border-bottom:1px solid #e6eefc;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:54px;
+}
+
+.h-title{
+  font-size:18px;
+  font-weight:800;
+}
+
+.h-sub{
+  font-size:14px;
+  font-weight:600;
+  color:#666;
+  margin-top:2px;
+}
+
+.h-web{
+  font-size:13px;
+  color:#666;
+  margin-top:4px;
+}
+
+/* BASE CARD */
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:14px;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  transition:box-shadow .25s ease;
+}
+.card:not(:first-child){margin-top:12px;}
+
+.card.up   { box-shadow:0 4px 14px rgba(213,0,0,0.18); }
+.card.down { box-shadow:0 4px 14px rgba(0,130,0,0.20); }
+.card.same { box-shadow:0 4px 14px rgba(0,0,0,0.10); }
+
+/* AVATAR */
+.avatar{
+  width:48px;height:48px;
+  border-radius:12px;
+  overflow:hidden;
+  background:#dfe8ff;
+  display:flex;justify-content:center;align-items:center;
+}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.avatar-text{
+  font-size:15px;font-weight:800;color:#1e3a8a;
+}
+.meta{
+  font-size:11px;color:var(--muted);margin-top:4px;text-align:center;
+}
+
+/* TEXT */
+.title{
+  font-weight:800;
+  font-size:15px;
+  color:#111;
+}
+.sub{
+  margin-top:6px;
+  font-size:13px;
+  color:#666;
+}
+
+/* PRICE COLORS */
+.red{color:#d50000;font-weight:800;}
+.green{color:#007f00;font-weight:800;}
+.gray{color:#444;font-weight:800;}
+
+/* LOADING */
+.loading{text-align:center;padding:20px;color:#777;font-size:14px;}
+.hint{text-align:center;margin-top:8px;color:#888}
+
+/* FAB HOME */
+.fab-home{
+  position:fixed;
+  left:18px;
+  bottom:24px;
+  width:64px;height:64px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.5);
+  backdrop-filter:blur(4px);
+  border:2px solid #3E8BFF;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
+  z-index:200;
+  box-shadow:0 8px 24px rgba(0,0,0,0.18);
+}
+.fab-home img{
+  width:30px;height:30px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">List Perubahan Harga</div>
+    <div id="headerTime" class="h-web"></div>
+    <img src="assets/harga.png" class="header-icon">
+  </div>
+</div>
+
+<div class="container">
+  <div id="list"></div>
+  <div id="loading" class="loading" style="display:none">Memuat...</div>
+  <div id="end" class="hint" style="display:none">Tidak ada lagi data</div>
+</div>
+
+<!-- FAB HOME -->
+<div class="fab-home" onclick="location.href='home.html'">
+  <img src="assets/beranda.png">
+</div>
+
+<script>
+const API_BASE = "https://api.bigmotor.biz.id";
+const $ = e => document.getElementById(e);
+
+let all = [];
+let loaded = 0;
+const BATCH = 20;
+
+/* LOAD USERS EXACT pengaturan.html */
+async function loadUsers(){
+  try{
+    const r = await fetch(API_BASE + "/api/users");
+    const j = await r.json();
+    localStorage.setItem("appUsers", JSON.stringify(j.users || []));
+  }catch(e){}
+}
+function getUserObj(name){
+  try{
+    const users = JSON.parse(localStorage.getItem("appUsers") || "[]");
+    return users.find(u => u.nama === name || u.username === name) || null;
+  }catch(e){
+    return null;
+  }
+}
+function initials(n){
+  if(!n) return "GM";
+  const p=n.trim().split(/\s+/);
+  if(p.length===1) return p[0].slice(0,2).toUpperCase();
+  return (p[0][0]+p[1][0]).toUpperCase();
+}
+
+/* PARSER */
+function parseHargaMessage(msg){
+  try{
+    const t = msg.text;
+
+    const nama = t.match(/\[HARGA\]\s(.+?):/)[1];
+
+    const hargaLama = Number(
+      t.match(/:\s([\d\.]+)\s→/)[1].replace(/\./g,'')
+    );
+    const hargaBaru = Number(
+      t.match(/→\s([\d\.]+)/)[1].replace(/\./g,'')
+    );
+
+    const user = t.match(/\(oleh\s(.+)\)/)[1];
+
+    const tanggal = new Date(msg.created_at)
+      .toLocaleString("id-ID",{day:"2-digit",month:"short",year:"numeric"});
+
+    return {nama,hargaLama,hargaBaru,user,tanggal};
+  }catch(e){
+    return null;
+  }
+}
+
+/* RENDER CARD */
+function renderCard(d){
+  const div=document.createElement("div");
+
+  const naik = d.hargaBaru > d.hargaLama;
+  const turun = d.hargaBaru < d.hargaLama;
+
+  div.className =
+    naik ? "card up" :
+    turun ? "card down" :
+    "card same";
+
+  const u = getUserObj(d.user);
+  const foto = u && u.foto ? u.foto : null;
+
+  const warnaBaru =
+    naik ? "red" :
+    turun ? "green" :
+    "gray";
+
+  div.innerHTML = `
+    <div style="text-align:center">
+      <div class="avatar">
+        ${
+          foto
+          ? `<img src="${foto}">`
+          : `<div class="avatar-text">${initials(d.user)}</div>`
+        }
+      </div>
+      <div class="meta">${d.user}</div>
+    </div>
+
+    <div class="mid">
+      <div class="title">
+        ${d.nama} ${
+          naik ? "naik" : turun ? "turun" : "tetap"
+        } dari ${d.hargaLama.toLocaleString("id-ID")}
+        menjadi <span class="${warnaBaru}">${d.hargaBaru.toLocaleString("id-ID")}</span>
+      </div>
+
+      <div class="sub">${d.tanggal} • oleh ${d.user}</div>
+    </div>
+  `;
+  return div;
+}
+
+/* LOAD ALL */
+async function loadAll(){
+  $("loading").style.display="block";
+  try{
+    const r = await fetch(API_BASE + "/api/message");
+    const j = await r.json();
+    all = (j.items || []).filter(x => x.text && x.text.startsWith("[HARGA]"));
+  }catch(e){
+    $("list").innerHTML="<div class='loading'>Gagal memuat data</div>";
+  }
+  $("loading").style.display="none";
+}
+
+/* BATCH */
+function loadBatch(){
+  if(loaded >= all.length){
+    $("end").style.display="block";
+    return;
+  }
+  const stop=Math.min(loaded+BATCH,all.length);
+  for(let i=loaded;i<stop;i++){
+    const p=parseHargaMessage(all[i]);
+    if(p) $("list").appendChild(renderCard(p));
+  }
+  loaded=stop;
+
+  if(loaded >= all.length){
+    $("end").style.display="block";
+  }
+}
+
+/* SCROLL */
+window.addEventListener("scroll",()=>{
+  if(window.innerHeight+window.scrollY >= document.body.offsetHeight-100){
+    loadBatch();
+  }
+});
+
+/* CLOCK */
+function tickHeader(){
+  const d=new Date();
+  $("headerTime").textContent =
+    d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})+
+    " • "+
+    d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+setInterval(tickHeader,1000);
+tickHeader();
+
+/* INIT */
+(async()=>{
+  await loadUsers();
+  await loadAll();
+  loadBatch();
+})();
+</script>
+
+</body>
+</html>

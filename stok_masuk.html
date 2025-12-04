@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Stok Masuk • BigMotor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#f6f8fb;
+  --card:#fff;
+  --muted:#727684;
+  --primary:#1976f7;
+  --accent:#3E8BFF;
+  --success:#16a34a;
+  --danger:#ef4444;
+  --radius:14px;
+  --shadow:0 12px 30px rgba(15,30,60,.07);
+}
+
+/* RESET */
+*{
+  box-sizing:border-box;
+  margin:0; padding:0;
+  font-family:Inter,system-ui,-apple-system;
+  -webkit-tap-highlight-color:transparent;
+}
+body{
+  background:var(--bg);
+  padding:16px;
+  color:#111;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* HEADER */
+.headerNew{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  text-align:left;
+  border-bottom:1px solid #e6eefc;
+  margin-bottom:16px;
+  padding-right:90px;
+  position:relative;
+}
+
+.headerNew .brand{
+  font-size:18px;
+  font-weight:800;
+}
+
+.headerNew .title{
+  font-size:14px;
+  font-weight:600;
+  color:#666;
+  margin-top:2px;
+}
+
+.headerNew .time{
+  font-size:13px;
+  color:#666;
+  margin-top:6px;
+}
+/* ADD BUTTON */
+.btnAddFab{
+  position:fixed;bottom:82px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(90deg,var(--accent),var(--primary));
+  color:#fff;padding:12px 22px;border-radius:999px;border:0;
+  font-weight:800;z-index:9990;
+  box-shadow:0 10px 28px rgba(0,0,0,.14);
+}
+.btnAddFab.bounce{animation:bounce .33s cubic-bezier(.2,.8,.2,1)}
+@keyframes bounce{
+  0%{transform:translateX(-50%) scale(1)}
+  30%{transform:translateX(-50%) scale(1.08)}
+  60%{transform:translateX(-50%) scale(.96)}
+  100%{transform:translateX(-50%) scale(1)}
+}
+
+/* SUMMARY CARD */
+.card{background:var(--card);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow);margin-top:16px}
+.summary-title{font-weight:800;margin-bottom:10px}
+.summary-empty{padding:20px;text-align:center;color:var(--muted)}
+.table-header,.table-row{display:flex;padding:10px 6px}
+.table-header{font-weight:800;border-bottom:1px solid #eef2ff}
+.t-name{flex:2}.t-old,.t-add,.t-new{flex:1;text-align:center}
+
+/* summary actions */
+.actions{
+  display:flex;gap:12px;
+  justify-content:center;margin-top:14px;
+}
+.btnCancel{
+  background:#fff;border:1px solid #e6e6e6;
+  padding:10px 18px;border-radius:999px;
+  font-weight:800;color:#444;
+}
+.btnSave{
+  background:linear-gradient(90deg,var(--accent),var(--primary));
+  color:#fff;padding:10px 18px;border-radius:999px;border:0;
+  font-weight:900;
+}
+.btnSave[disabled]{opacity:.55;cursor:not-allowed}
+
+/* POPUP */
+.popup{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;justify-content:center;align-items:flex-start;
+  padding-top:28px;z-index:9000;
+}
+.popup-inner{
+  background:#fff;width:94%;max-width:760px;
+  border-radius:16px;padding:12px;
+  max-height:86vh;overflow:auto;
+}
+.popup-header{
+  position:sticky;top:0;background:#fff;
+  padding:10px;display:flex;gap:8px;
+  border-bottom:1px solid #eee;z-index:12;
+}
+.search-input{
+  flex:1;padding:10px;border-radius:10px;
+  border:1px solid #e6e6e6;
+}
+.close-x{
+  border:0;background:#fff;
+  font-weight:900;font-size:18px;
+  padding:6px 10px;border-radius:8px;
+}
+
+/* LIST ITEMS */
+.list{padding:8px 2px;max-height:66vh;overflow:auto}
+.item{
+  background:#fff;border:1px solid #eef2ff;
+  border-radius:12px;padding:12px;
+  margin-bottom:10px;cursor:pointer;position:relative;
+  transition:transform .16s,box-shadow .16s;
+}
+.item:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.06)}
+.rowTop{display:flex;gap:12px;align-items:center;transition:margin-right .18s ease}
+.thumb{
+  width:60px;height:46px;border-radius:10px;
+  background:#eef2ff;background-size:cover;background-position:center;
+}
+.meta{flex:1;min-width:0}
+.name{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:13px;color:var(--muted)}
+
+/* INLINE */
+.inline{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  display:flex;gap:8px;align-items:center;padding:0 6px;
+  background:#fff;height:100%;width:clamp(120px,30vw,170px);
+  justify-content:flex-end;animation:slideIn .18s ease;
+}
+@keyframes slideIn{
+  from{transform:translate(60%,-50%);opacity:0}
+  to{transform:translate(0,-50%);opacity:1}
+}
+.plus-input{
+  width:clamp(50px,10vw,70px);
+  padding:8px;border-radius:10px;
+  border:1px solid #cdd8ff;
+  text-align:center;font-weight:800;
+}
+.itemOpen .rowTop{
+  margin-right:clamp(120px,30vw,170px);
+}
+
+/* BOTTOM SHEET */
+.bottom-sheet{
+  position:fixed;left:0;right:0;bottom:-320px;background:#fff;
+  border-radius:16px 16px 0 0;
+  padding:18px;box-shadow:0 -8px 24px rgba(0,0,0,.18);
+  transition:bottom .28s;z-index:16000;
+}
+.bottom-sheet.show{bottom:0}
+.bottom-sheet-title{font-weight:800;font-size:16px;margin-bottom:6px}
+.bottom-sheet-sub{color:var(--muted);margin-bottom:12px}
+.sheet-actions{display:flex;gap:10px;justify-content:flex-end}
+.sheet-btn{padding:10px 16px;border-radius:999px;border:0;font-weight:800}
+.sheet-btn.cancel{background:#fff;border:1px solid #ddd}
+.sheet-btn.ok{background:var(--primary);color:#fff}
+
+/* CONFIRM */
+#confirmBox{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+  align-items:center;justify-content:center;z-index:30000;
+}
+#confirmInner{
+  background:#fff;padding:18px;border-radius:12px;
+  width:86%;max-width:360px;text-align:center;
+  box-shadow:0 12px 30px rgba(0,0,0,.2);
+}
+#confirmMsg{font-weight:800;margin-bottom:16px}
+.confirm-row{display:flex;gap:10px;justify-content:center}
+.confirm-btn{padding:10px 14px;border-radius:999px;font-weight:800;border:0;cursor:pointer}
+.confirm-no{background:#fff;border:1px solid #e6e6e6}
+.confirm-yes{background:var(--primary);color:#fff}
+
+/* TOAST */
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:18px;background:#111;color:#fff;
+  padding:10px 14px;border-radius:999px;
+  opacity:0;pointer-events:none;transition:opacity .25s;z-index:26000;
+}
+.toast.show{opacity:1;pointer-events:auto}
+
+/* highlight */
+.hl{color:var(--primary);font-weight:800}
+
+.fab-add{
+  position:fixed;
+  right:18px;
+  bottom:24px;
+  width:58px;
+  height:58px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#3E8BFF,#1976f7);
+  color:#fff;
+  font-size:32px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 10px 26px rgba(0,0,0,.22);
+  z-index:12000;
+}
+.fab-add:active{
+  transform:scale(.92);
+}
+.fab-hide{
+  display:none !important;
+}
+.header-wrap{
+  position:relative;
+}
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:60px;
+  height:auto;
+  z-index:5;
+}
+</style>
+</head>
+<body>
+
+<div class="header-wrap">
+  <div class="headerNew">
+    <div class="brand">BIG Motor Tingkulu</div>
+    <div class="title">Stok Masuk</div>
+    <div id="headerTime" class="time"></div>
+
+    <img src="assets/stok.png" class="header-icon">
+  </div>
+</div>
+
+
+
+<!-- SUMMARY -->
+<div class="card">
+  <div class="summary-title">Ringkasan Stok</div>
+  <div id="summary" class="summary-empty">Belum ada penambahan stok</div>
+
+  <div class="actions" id="actions">
+    <button id="btnCancel" class="btnCancel">Batal</button>
+    <button id="btnSave" class="btnSave" disabled>Simpan</button>
+  </div>
+</div>
+
+<!-- POPUP -->
+<div id="popup" class="popup">
+  <div class="popup-inner">
+
+    <div class="popup-header">
+      <input id="search" class="search-input" placeholder="Cari barang..."
+             autocomplete="off" spellcheck="false">
+      <button id="closePopup" class="close-x">✕</button>
+    </div>
+
+    <div id="list" class="list"></div>
+
+  </div>
+</div>
+
+<!-- BOTTOM SHEET -->
+<div id="sheet" class="bottom-sheet">
+  <div id="sheetTitle" class="bottom-sheet-title">
+    0 jenis barang akan ditambahkan ke stock
+  </div>
+  <div id="sheetSub" class="bottom-sheet-sub">
+    Total kuantitas: 0
+  </div>
+
+  <div class="sheet-actions">
+    <button id="sheetCancel" class="sheet-btn cancel">Batal</button>
+    <button id="sheetOk" class="sheet-btn ok">Proses</button>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div id="confirmBox">
+  <div id="confirmInner">
+    <div id="confirmMsg"></div>
+    <div class="confirm-row">
+      <button id="confirmNo" class="confirm-btn confirm-no">Tidak</button>
+      <button id="confirmYes" class="confirm-btn confirm-yes">Ya</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+<div id="fabAdd" class="fab-add">+</div>
+
+<script>
+const API_BASE="https://api.bigmotor.biz.id";
+const $=id=>document.getElementById(id);
+
+let items=[];
+let added={};
+let open=null;
+
+/* ============================================================
+   1. DISABLE BACK BROWSER + ANDROID (GLOBAL)
+============================================================ */
+history.pushState(null,"",location.href);
+window.addEventListener("popstate",()=>{
+  history.pushState(null,"",location.href);
+});
+
+/* ========================= TIME ========================== */
+function updateHeaderTime(){
+  const d=new Date();
+  const dp=d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"});
+  const tp=d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+  $("headerTime").textContent=`${dp} • ${tp}`;
+}
+updateHeaderTime(); setInterval(updateHeaderTime,10000);
+
+/* ========================= TOAST ========================= */
+function showToast(msg){
+  const t=$("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+/* ===================== CONFIRM (style B) ===================== */
+function showConfirm(msg,onYes,onNo){
+  $("confirmMsg").textContent=msg;
+  $("confirmBox").style.display="flex";
+
+  $("confirmNo").onclick=()=>{
+    $("confirmBox").style.display="none";
+    if(onNo) onNo();
+  };
+  $("confirmYes").onclick=()=>{
+    $("confirmBox").style.display="none";
+    if(onYes) onYes();
+  };
+}
+
+/* ========================= HELPERS ========================= */
+function esc(s){
+  return String(s||"").replace(/[&<>"']/g,a=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[a]));
+}
+
+/* fuzzy + highlight */
+function fuzzy(text,key){
+  text=String(text||"").toLowerCase();
+  key=String(key||"").toLowerCase();
+  let i=0,j=0;
+  while(i<text.length && j<key.length){
+    if(text[i]===key[j]) j++;
+    i++;
+  }
+  return j===key.length;
+}
+function highlight(text,key){
+  if(!key) return esc(text);
+  const re=new RegExp("("+key.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig");
+  return esc(text).replace(re, `<span class="hl">$1</span>`);
+}
+
+/* ========================= LOAD ITEMS ========================= */
+async function loadItems(){
+  try{
+    const r=await fetch(API_BASE+"/api/barang");
+    const j=await r.json();
+    items=j.items||[];
+  }catch{
+    items=[];
+    showToast("Gagal memuat barang");
+  }
+}
+
+/* ========================= RENDER LIST ========================= */
+function renderList(q=""){
+  const wrap=$("list"); wrap.innerHTML="";
+  const key=q.trim();
+  let arr=items.slice();
+  if(key) arr=arr.filter(b=>fuzzy(b.nama,key));
+
+  if(!arr.length){
+    wrap.innerHTML=`<div style="padding:18px;text-align:center;color:#777">Tidak ada barang</div>`;
+    return;
+  }
+
+  arr.forEach(b=>{
+    const row=document.createElement("div");
+    row.className="item";
+    row.dataset.id=b.id;
+
+    const addedData=added[b.id];
+
+    row.innerHTML=`
+      <div class="rowTop">
+        <div class="thumb" style="background-image:url('${esc(b.foto||"")}')"></div>
+        <div class="meta">
+          <div class="name">${highlight(b.nama,key)}</div>
+          <div class="sub">ID: ${b.id}</div>
+        </div>
+        <div class="sub" id="old_${b.id}">${
+          addedData ? `${b.stock} <span class="hl">+ ${addedData.plus}</span>` : b.stock
+        }</div>
+      </div>
+    `;
+
+    if(addedData){
+      row.classList.add("itemOpen");
+      insertInline(b,row,""); // PATCH 2 → always blank
+    }
+
+    row.onclick=e=>{
+      if(e.target.closest(".inline")) return;
+      toggleItem(b,row);
+    };
+
+    wrap.appendChild(row);
+  });
+
+  updateSheet();
+}
+
+/* ========================= INSERT INLINE ========================= */
+function insertInline(b,row,val=""){
+  const old=row.querySelector(".inline");
+  if(old) old.remove();
+
+  const div=document.createElement("div");
+  div.className="inline";
+  div.innerHTML=`
+    <div style="font-weight:900;font-size:16px;color:var(--primary)">+</div>
+    <input id="in_${b.id}" class="plus-input" type="number" inputmode="numeric"
+           value="${val}" min="1">
+    <button id="ok_${b.id}" class="btnSave" style="padding:8px 12px;font-size:13px">OK</button>
+  `;
+  row.appendChild(div);
+
+  const inp=$("in_"+b.id);
+  inp.onkeydown=e=>{
+    if(e.key==="Enter"){ commit(b.id); }
+  };
+  $("ok_"+b.id).onclick=e=>{
+    e.stopPropagation();
+    commit(b.id);
+  };
+}
+
+/* ========================= TOGGLE ITEM ========================= */
+function toggleItem(b,row){
+
+  /* PATCH 2 behavior:
+     Jika item sudah ada (6 + 1), tap → meminta konfirmasi dulu */
+  if(added[b.id]){
+    showConfirm("Ubah detail?",()=>{
+
+      delete added[b.id];
+
+      const old=row.querySelector("#old_"+b.id);
+      if(old) old.textContent=b.stock;
+
+      row.classList.remove("itemOpen");
+      const inl=row.querySelector(".inline");
+      if(inl) inl.remove();
+
+      open=b.id;
+      row.classList.add("itemOpen");
+      insertInline(b,row,""); // PATCH 2 → input always blank
+
+      setTimeout(()=>{ const ii=$("in_"+b.id); if(ii) ii.focus(); },100);
+
+    });
+    return;
+  }
+
+  if(open && open!==b.id) closeOpen();
+
+  if(row.classList.contains("itemOpen")){
+    closeInline(b,row);
+    return;
+  }
+
+  open=b.id;
+  row.classList.add("itemOpen");
+  insertInline(b,row,""); // PATCH 2
+
+  setTimeout(()=>{ const ii=$("in_"+b.id); if(ii) ii.focus(); },100);
+}
+
+function closeOpen(){
+  if(!open) return;
+  const r=document.querySelector(`.item[data-id="${open}"]`);
+  const it=items.find(x=>x.id==open);
+  if(r) closeInline(it,r);
+  open=null;
+}
+function closeInline(b,row){
+  const inl=row.querySelector(".inline");
+  if(inl) inl.remove();
+  row.classList.remove("itemOpen");
+}
+
+/* ========================= COMMIT ========================= */
+function commit(id){
+  const inp=$("in_"+id);
+  if(!inp) return;
+
+  let v=parseInt(inp.value)||0;
+  if(v<=0){ showToast("Jumlah harus > 0"); return; }
+
+  const it=items.find(x=>x.id==id);
+  added[id]={old:it.stock,plus:v,nama:it.nama};
+
+  const row=document.querySelector(`.item[data-id="${id}"]`);
+  row.querySelector("#old_"+id).innerHTML=`${it.stock} <span class="hl">+ ${v}</span>`;
+
+  closeInline(it,row);
+  renderSummary();
+  updateSheet();
+}
+
+/* ========================= RENDER SUMMARY ========================= */
+function renderSummary(){
+  const box=$("summary");
+  const ids=Object.keys(added);
+
+  if(!ids.length){
+    box.className="summary-empty";
+    box.textContent="Belum ada penambahan stok";
+    $("btnSave").disabled=true;
+    return;
+  }
+
+  box.className="";
+  box.innerHTML="";
+
+  const head=document.createElement("div");
+  head.className="table-header";
+  head.innerHTML=`
+    <div class="t-name">Nama</div>
+    <div class="t-old">Stok Lama</div>
+    <div class="t-add">Tambah</div>
+    <div class="t-new">Stok Baru</div>
+  `;
+  box.appendChild(head);
+
+  ids.forEach(id=>{
+    const d=added[id];
+    const it=items.find(x=>x.id==id);
+
+    const r=document.createElement("div");
+    r.className="table-row";
+    r.innerHTML=`
+      <div class="t-name">${esc(it.nama)}</div>
+      <div class="t-old">${d.old}</div>
+      <div class="t-add">+ ${d.plus}</div>
+      <div class="t-new">${d.old+d.plus}</div>
+    `;
+    box.appendChild(r);
+  });
+
+  $("btnSave").disabled=false;
+}
+
+/* ========================= SHEET HELPERS ========================= */
+function typesCount(){return Object.keys(added).length}
+function qtyTotal(){return Object.values(added).reduce((s,it)=>s+it.plus,0)}
+function updateSheet(){
+  $("sheetTitle").textContent=`${typesCount()} jenis barang akan ditambahkan ke stock`;
+  $("sheetSub").textContent=`Total kuantitas: ${qtyTotal()}`;
+  if($("popup").style.display==="flex" && typesCount()>0)
+    $("sheet").classList.add("show");
+  else
+    $("sheet").classList.remove("show");
+}
+
+/* ========================= SHEET CANCEL ========================= */
+/* PATCH #1: RESET TOTAL */
+$("sheetCancel").onclick=()=>{
+  added={};
+  renderSummary();
+  updateSheet();
+
+  // reset card UI
+  document.querySelectorAll(".itemOpen").forEach(r=>{
+    r.classList.remove("itemOpen");
+    const inl=r.querySelector(".inline");
+    if(inl) inl.remove();
+
+    const id=r.dataset.id;
+    const it=items.find(x=>x.id==id);
+    if(it){
+      const old=r.querySelector("#old_"+id);
+      if(old) old.textContent=it.stock;
+    }
+  });
+
+  renderList($("search").value||"");
+  showToast("Perubahan dibatalkan");
+};
+
+/* ========================= SHEET OK ========================= */
+$("sheetOk").onclick=()=>{
+  $("sheet").classList.remove("show");
+  $("popup").style.display="none";
+  $("btnAdd").style.display="block";
+  renderSummary();
+  showToast("Kembali ke ringkasan");
+};
+
+/* ========================= OPEN / CLOSE POPUP ========================= */
+async function openPopup(){
+  $("popup").style.display="flex";
+
+  // FAB hilang
+  $("fabAdd").classList.add("fab-hide");
+
+  // Wajib load items sebelum render list
+  await loadItems();
+
+  renderList("");
+  updateSheet();
+}
+function closePopup(){
+
+  if($("sheet").classList.contains("show")){
+    showConfirm("Batalkan dan kembali ke awal?",()=>{
+      added={};
+      renderSummary();
+      updateSheet();
+      $("popup").style.display="none";
+      $("fabAdd").classList.remove("fab-hide");   // <— tambahkan
+    });
+    return;
+  }
+
+  $("popup").style.display="none";
+  $("fabAdd").classList.remove("fab-hide");       // <— tambahkan
+  updateSheet();
+}
+
+/* ========================= SUMMARY BUTTONS ========================= */
+$("btnCancel").onclick=()=>{
+  if(!Object.keys(added).length){
+    showConfirm("Ringkasan kosong. Kembali ke beranda?",()=>location.href="home.html");
+    return;
+  }
+  showConfirm("Hapus isi ringkasan?",()=>{
+    added={};
+    renderSummary();
+  });
+};
+
+$("btnSave").onclick=()=>{
+  if(!Object.keys(added).length){
+    showConfirm("Ringkasan kosong. Kembali ke beranda?",()=>location.href="home.html");
+    return;
+  }
+  saveAll();
+};
+
+/* saveAll - sends items[] like penjualan */
+async function saveAll(){
+  const ids = Object.keys(added);
+  const op = localStorage.getItem("username") || "guest";
+  if(!ids.length){ showConfirm("Ringkasan kosong. Kembali ke home?", ()=> location.href="home.html"); return; }
+
+  const payload = {
+    dibuat_oleh: op,
+    items: ids.map(id => ({
+      id: Number(id),
+      jumlah: added[id].plus,
+      keterangan: ""
+    }))
+  };
+
+  try{
+    const r = await fetch(API_BASE + "/api/stok_masuk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if(!r.ok || !j.ok){ showToast("Gagal menyimpan"); return; }
+    showToast("Tersimpan");
+    added = {}; renderSummary(); updateSheet();
+    setTimeout(()=> location.href = "riwayat.html", 700);
+  }catch(e){
+    showToast("Error koneksi");
+  }
+}
+
+/* ========================= EVENTS ========================= */
+const fab = $("fabAdd");
+
+fab.onclick = async () => {
+  fab.classList.add("bounce");
+  setTimeout(()=> fab.classList.remove("bounce"),300);
+
+  // langsung buka popup
+  openPopup();
+};
+
+$("closePopup").onclick=closePopup;
+$("search").oninput=e=>renderList(e.target.value);
+
+/* INIT */
+(async()=>{
+  await loadItems();
+  renderSummary();
+  updateSheet();
+})();
+</script>
+
+</body>
+</html>

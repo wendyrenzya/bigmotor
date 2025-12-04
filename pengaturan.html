@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pengaturan</title>
+
+<style>
+:root{
+  --card:#fff;
+  --bg:#f4f5f7;
+  --muted:#6b7280;
+}
+
+/* RESET */
+body{
+  margin:0;
+  padding-bottom:90px;
+  background:var(--bg);
+  font-family:Inter,Segoe UI,Roboto;
+  color:#222;
+}
+*{-webkit-tap-highlight-color:transparent}
+
+/* ========== HEADER (SAMA PERSIS PENJUALAN) ========== */
+.header-wrap{
+  position:relative;
+}
+
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  text-align:left;
+  border-bottom:1px solid #e6eefc;
+  margin-bottom:16px;
+  padding-right:90px;
+}
+
+.h-title{
+  font-size:18px;
+  font-weight:800;
+}
+
+.h-sub{
+  font-size:14px;
+  font-weight:600;
+  color:#666;
+  margin-top:2px;
+}
+
+.h-time{
+  font-size:13px;
+  color:#666;
+  margin-top:6px;
+}
+
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:60px;
+  height:auto;
+}
+
+/* ========== GRID MENU BARU ========== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+  padding:0 16px;
+  margin-top:20px;
+}
+
+.menu-item{
+  background:var(--card);
+  border-radius:18px;
+  padding:18px 8px 14px;
+  text-align:center;
+  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  cursor:pointer;
+  transition:transform .15s;
+}
+
+.menu-item img{
+  width:72px;
+  height:72px;
+  object-fit:contain;
+}
+
+.menu-item span{
+  display:block;
+  margin-top:10px;
+  font-size:14px;
+  font-weight:600;
+  color:#111;
+}
+
+.menu-item:active{
+  transform:scale(.98);
+}
+
+/* ========== NAVBAR ========== */
+.navbar{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  background:#fff;
+  display:flex;
+  justify-content:space-around;
+  padding:8px 0 6px;
+  border-top:1px solid #e6e6e6;
+  box-shadow:0 -3px 10px rgba(0,0,0,0.06);
+  z-index:999;
+}
+
+.nav-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  font-size:11px;
+  font-weight:600;
+  padding:6px 12px;
+  border-radius:16px;
+  cursor:pointer;
+  color:#6a6a6a;
+  transition:.15s;
+}
+
+.nav-item img{
+  width:28px;height:28px;margin-bottom:4px;
+  opacity:.65;
+}
+
+.nav-active{
+  background:rgba(62,139,255,0.12);
+  color:#3E8BFF!important;
+}
+
+.nav-active img{
+  opacity:1!important;
+}
+
+/* bounce */
+.bounce{animation:bounceTap .25s ease-out}
+@keyframes bounceTap{
+  0%{transform:scale(1)}
+  40%{transform:scale(.92)}
+  100%{transform:scale(1)}
+}
+
+/* POPUP QR */
+#qrPopup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+</style>
+</head>
+
+<body>
+
+<script>
+const token = localStorage.getItem("token");
+if(!token) location.href="index.html";
+
+/* bounce + navigate */
+function bounceThenNavigate(el,url){
+  if(el){
+    el.classList.add("bounce");
+    setTimeout(()=>el.classList.remove("bounce"),280);
+  }
+  setTimeout(()=>location.href=url,90);
+}
+
+/* logout */
+function doLogout(el){
+  if(el){
+    el.classList.add("bounce");
+    setTimeout(()=>el.classList.remove("bounce"),280);
+  }
+  setTimeout(()=>{
+    localStorage.clear();
+    location.href="index.html";
+  },90);
+}
+
+/* time updater */
+function updateHeaderTime(){
+  const d=new Date();
+  document.getElementById("headerTime").textContent =
+    d.toLocaleString("id-ID",{day:"2-digit",month:"short",year:"numeric"}) +
+    " • " +
+    d.toLocaleString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+setInterval(updateHeaderTime,10000);
+setTimeout(updateHeaderTime,10);
+
+/* show QR */
+function showQR(){
+  const p=document.getElementById("qrPopup");
+  p.style.display="flex";
+  p.onclick=()=>p.style.display="none";
+}
+</script>
+
+<!-- HEADER BARU -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">Pengaturan Sistem</div>
+    <div id="headerTime" class="h-time"></div>
+
+    <img src="assets/atur.png" class="header-icon">
+  </div>
+</div>
+
+<!-- GRID MENU BARU -->
+<div class="grid">
+
+  <div class="menu-item" onclick="bounceThenNavigate(this,'absen.html')">
+    <img src="assets/absen.png"><span>Absensi</span>
+  </div>
+
+  <div class="menu-item" onclick="bounceThenNavigate(this,'user.html')">
+    <img src="assets/user.png"><span>User</span>
+  </div>
+
+  <div class="menu-item" onclick="bounceThenNavigate(this,'list_katalog.html')">
+    <img src="assets/katalog.png"><span>Katalog</span>
+  </div>
+
+  <div class="menu-item" onclick="bounceThenNavigate(this,'bonus.html')">
+    <img src="assets/bonus.png"><span>Bonus</span>
+  </div>
+
+  <div class="menu-item" onclick="showQR()">
+    <img src="assets/qrcode.png"><span>QR Code</span>
+  </div>
+
+  <div class="menu-item" onclick="doLogout(this)">
+    <img src="assets/logout.png"><span>Logout</span>
+  </div>
+
+</div>
+
+<!-- POPUP QR -->
+<div id="qrPopup">
+  <div style="background:#fff;padding:16px;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.2)">
+    <img src="assets/QR.jpg" style="width:260px;height:auto;border-radius:12px">
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="nav-item" onclick="bounceThenNavigate(this,'home.html')">
+    <img src="assets/beranda.png">Beranda
+  </div>
+  <div class="nav-item" onclick="bounceThenNavigate(this,'barang.html')">
+    <img src="assets/barang.png">Barang
+  </div>
+  <div class="nav-item" onclick="bounceThenNavigate(this,'riwayat.html')">
+    <img src="assets/riwayat.png">Riwayat
+  </div>
+  <div class="nav-item nav-active">
+    <img src="assets/pengaturan.png">Pengaturan
+  </div>
+</div>
+
+</body>
+</html>

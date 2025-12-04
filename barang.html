@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Data Barang - Big Motor</title>
+
+<style>
+
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  text-align:left;
+  position:sticky;top:0;z-index:20;
+  border-bottom:1px solid #e6eefc;
+  padding-right:90px; /* ruang gambar kanan */
+}
+.h-title{
+  font-size:18px;
+  font-weight:800;
+}
+.h-sub{
+  font-size:14px;
+  font-weight:600;
+  color:#666;
+  margin-top:2px;
+}
+.h-time{
+  font-size:13px;
+  color:#666;
+  margin-top:6px;
+}
+
+:root{
+  --primary:#3E8BFF;
+  --accent:#A259FF;
+  --danger:#FF3B30;
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --muted:#8b8b8b;
+
+  /* highlight baru */
+  --flash: #7db7ff;      /* flash kuat */
+  --soft1: #d9e9ff;      /* highlight lembut awal */
+  --soft2: #f3f7ff;      /* transisi akhir */
+}
+
+/* RESET */
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+html, body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow-x:hidden;
+  background:var(--bg);
+  font-family:Inter, 'Segoe UI', system-ui;
+}
+body{
+  overflow-y:hidden;
+}
+
+/* HEADER */
+.topbar{
+  padding:14px 14px 6px;
+}
+.top-title{
+  font-size:22px;
+  font-weight:800;
+}
+.top-sub{
+  font-size:12px;
+  color:#777;
+  margin-top:2px;
+}
+
+/* SEARCH */
+.search-row{
+  padding:6px 14px 8px;
+  position:relative;
+}
+.search-wrap{
+  width:100%;
+  position:relative;
+}
+.search-input{
+  width:100%;
+  padding:12px 48px 12px 14px;
+  font-size:15px;
+  background:#fff;
+  border:1px solid #e6e6e6;
+  border-radius:14px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.06);
+}
+.search-input::placeholder{color:#b5b5b5;}
+
+.search-icon{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:32px;height:32px;
+  background:none;border:none;
+  display:flex;justify-content:center;align-items:center;
+  cursor:pointer;
+}
+.tune-icon{
+  width:22px;height:22px;opacity:.85;
+}
+
+/* LIST */
+.list{
+  position:fixed;
+  top:136px;
+  left:0;
+  right:0;
+  bottom:80px;
+  overflow-y:auto;
+  padding-bottom:20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* LIST ITEM */
+.item{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  background:#fff;
+  margin:10px 12px;
+  padding:12px;
+  border-radius:14px;
+  box-shadow:0 6px 18px rgba(24,24,24,0.06);
+  cursor:pointer;
+  transition:transform .15s, box-shadow .18s;
+}
+.item:active{transform:scale(.96);}
+.item-img{
+  width:86px;height:86px;
+  border-radius:12px;
+  background:#eee;
+  object-fit:cover;
+}
+.item-info{flex:1;}
+.item-name{font-size:16px;font-weight:800;}
+.item-meta{font-size:13px;color:var(--muted);margin-top:4px;}
+.item-extra{font-size:12px;color:var(--muted);margin-top:8px;}
+
+/* FLASH highlight */
+.item.flash-highlight{
+  background:var(--flash) !important;
+  transition:none !important;
+}
+
+/* SOFT highlight & fade out */
+.item.soft-highlight{
+  animation: softFade 4s forwards;
+}
+
+@keyframes softFade{
+  0%{background:var(--soft1);}
+  50%{background:var(--soft2);}
+  100%{background:white;}
+}
+
+/* FAB */
+.fab{
+  position:fixed;
+  right:18px;
+  bottom:100px;
+  width:62px;height:62px;
+  border-radius:999px;
+  background:linear-gradient(135deg,var(--accent),var(--primary));
+  color:#fff;
+  display:flex;justify-content:center;align-items:center;
+  font-size:34px;
+  box-shadow:0 12px 30px rgba(25,25,25,0.20);
+  cursor:pointer;
+  z-index:60;
+  transition:.16s;
+}
+.fab:active{transform:scale(.9);}
+
+/* NAVBAR */
+.navbar{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  background:#fff;
+  border-top:1px solid #e6e6e6;
+  box-shadow:0 -3px 10px rgba(0,0,0,0.06);
+  display:flex;
+  justify-content:space-around;
+  padding:8px 0 6px;
+  z-index:999;
+}
+.nav-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:6px 12px;
+  border-radius:16px;
+  font-size:11px;
+  font-weight:600;
+  color:#6a6a6a;
+  cursor:pointer;
+  transition:.15s;
+}
+.nav-item img{
+  width:28px;height:28px;
+  margin-bottom:4px;
+  opacity:.65;
+  transition:.15s;
+}
+.nav-active{
+  background:rgba(62,139,255,0.12);
+  color:var(--primary)!important;
+}
+.nav-active img{opacity:1!important;}
+.bounce{animation:bounceTap .25s ease-out;}
+@keyframes bounceTap{
+  0%{transform:scale(1)}
+  40%{transform:scale(.9)}
+  100%{transform:scale(1)}
+}
+
+/* FILTER SHEET — tetap seperti sebelumnya */
+#sheetOverlay{
+  display:none;
+  position:fixed;
+  left:0;top:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.35);
+  z-index:150;
+}
+#filterSheet{
+  position:fixed;left:0;right:0;bottom:-100%;
+  height:60vh;
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  box-shadow:0 -10px 30px rgba(0,0,0,0.22);
+  padding:18px;
+  overflow-y:auto;
+  transition:bottom .32s cubic-bezier(.2,.95,.3,1);
+  z-index:151;
+}
+.opt-item{
+  padding:12px;
+  border-radius:12px;
+  background:#fafafa;
+  border:1px solid #f0f0f0;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* TOAST */
+#toast{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:110px;
+  background:#111;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:700;
+  display:none;
+  z-index:400;
+}
+.header-wrap{
+  position:relative;
+}
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:60px;
+  height:auto;
+  z-index:5;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">Data Barang</div>
+    <div id="headerTime" class="h-time"></div>
+
+    <img src="assets/barang2.png" class="header-icon">
+  </div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-row">
+  <div class="search-wrap">
+    <input id="searchInput" class="search-input" placeholder="cari barang.." autocomplete="off">
+    <button id="filterBtn" class="search-icon">
+      <svg class="tune-icon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.6">
+        <path d="M4 21v-7M4 10V3M12 21v-4M12 13V3M20 21v-10M20 7V3M2 7h4M10 13h4M18 3h4"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- LIST -->
+<div id="listRoot" class="list">Memuat data...</div>
+
+<!-- FAB -->
+<div id="fab" class="fab">+</div>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="nav-item" onclick="navTo('home.html',this)">
+    <img src="assets/beranda.png">Beranda
+  </div>
+  <div class="nav-item nav-active" onclick="navTo('barang.html',this)">
+    <img src="assets/barang.png">Barang
+  </div>
+  <div class="nav-item" onclick="navTo('riwayat.html',this)">
+    <img src="assets/riwayat.png">Riwayat
+  </div>
+  <div class="nav-item" onclick="navTo('pengaturan.html',this)">
+    <img src="assets/pengaturan.png">Pengaturan
+  </div>
+</div>
+
+<!-- SHEET -->
+<div id="sheetOverlay"></div>
+<div id="filterSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" style="text-align:center;font-weight:800;margin-bottom:8px;">Filter & Sorting</div>
+
+  <div class="sheet-section">
+    <div style="color:var(--muted);font-size:13px;">Kategori</div>
+    <div id="catList" class="opt-list"></div>
+  </div>
+
+  <div class="sheet-section">
+    <div style="color:var(--muted);font-size:13px;">Urutkan</div>
+    <div class="opt-list">
+      <div class="opt-item" data-sort="NONE">Default</div>
+      <div class="opt-item" data-sort="NAME_ASC">Nama (A - Z)</div>
+      <div class="opt-item" data-sort="PRICE_LOW">Termurah</div>
+      <div class="opt-item" data-sort="PRICE_HIGH">Termahal</div>
+      <div class="opt-item" data-sort="STOCK_HIGH">Stok Terbanyak</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* CEK LOGIN */
+const token = localStorage.getItem("token");
+if (!token) location.href = "index.html";
+const API_BASE = "https://api.bigmotor.biz.id";
+
+/* NAV */
+function navTo(url,el){
+  el.classList.add("bounce");
+  setTimeout(()=>{window.location=url},200);
+}
+
+/* TOAST */
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.innerText=msg; t.style.display="block";
+  setTimeout(()=>t.style.display="none",1400);
+}
+
+/* SHEET */
+filterBtn.onclick=openFilter;
+function openFilter(){
+  sheetOverlay.style.display="block";
+  filterSheet.style.bottom="0";
+}
+sheetOverlay.onclick=closeFilter;
+function closeFilter(){
+  sheetOverlay.style.display="none";
+  filterSheet.style.bottom="-100%";
+}
+
+/* FUZZY utils */
+function norm(s){
+  return (s||"").toLowerCase().replace(/[^\w\s]/g," ").replace(/\s+/g," ").trim();
+}
+function lev(a,b){
+  if(a===b)return 0;
+  const m=a.length,n=b.length;
+  if(!m)return n;if(!n)return m;
+  let v0=Array(n+1),v1=Array(n+1);
+  for(let i=0;i<=n;i++)v0[i]=i;
+  for(let i=0;i<m;i++){
+    v1[0]=i+1;
+    for(let j=0;j<n;j++){
+      const cost=a[i]===b[j]?0:1;
+      v1[j+1]=Math.min(v1[j]+1,v0[j+1]+1,v0[j]+cost);
+    }
+    [v0,v1]=[v1,v0];
+  }
+  return v0[n];
+}
+function fuzzy(text,q){
+  if(!q)return true;
+  const t=norm(text), toks=norm(q).split(" "), words=t.split(" ");
+  return toks.every(tok=>{
+    if(t.includes(tok))return true;
+    if(words.some(w=>w.startsWith(tok)))return true;
+    if(words.some(w=>lev(w,tok)<=1))return true;
+    return false;
+  });
+}
+function esc(s){
+  return (s||"").replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function highlight(txt,q){
+  if(!q)return esc(txt);
+  let r=esc(txt), toks=norm(q).split(" ");
+  toks.forEach(t=>{
+    if(!t)return;
+    const safe=t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    r=r.replace(new RegExp(`(${safe})`,'gi'),
+      `<span style="color:#3E8BFF;font-weight:800">$1</span>`);
+  });
+  return r;
+}
+
+/* DATA */
+let DATA=[];
+let CAT="ALL";
+let SORT="NAME_ASC"; /* default A-Z */
+
+load();
+
+async function load(){
+  const root=listRoot;
+  root.innerHTML=`<div style="text-align:center;color:#777;padding:18px">Memuat data...</div>`;
+  try{
+    let r=await fetch(API_BASE+"/api/barang");
+    let j=await r.json();
+    DATA=j.items||[];
+    apply();
+    loadKategori();
+    handleNewItemScroll();
+  }catch(e){
+    root.innerHTML=`<div style="text-align:center;color:#d33;padding:18px">Gagal memuat data</div>`;
+  }
+}
+
+async function loadKategori(){
+  try{
+    let r=await fetch(API_BASE+"/api/kategori");
+    let j=await r.json();
+
+    catList.innerHTML="";
+    let all=document.createElement("div");
+    all.className="opt-item";
+    all.dataset.cat="ALL";
+    all.innerText="Semua Kategori";
+    all.onclick=()=>{CAT="ALL";apply();closeFilter();};
+    catList.appendChild(all);
+
+    (j.categories||[]).forEach(c=>{
+      let d=document.createElement("div");
+      d.className="opt-item";
+      d.dataset.cat=c;
+      d.innerText=c;
+      d.onclick=()=>{CAT=c;apply();closeFilter();};
+      catList.appendChild(d);
+    });
+
+  }catch(e){}
+}
+
+searchInput.oninput=apply;
+
+filterSheet.addEventListener("click",e=>{
+  let o=e.target.closest(".opt-item");
+  if(o && o.dataset.sort){
+    SORT=o.dataset.sort;
+    apply();
+    closeFilter();
+  }
+});
+
+/* APPLY filter + search + sort */
+function apply(){
+  let q=searchInput.value;
+  let arr=DATA.map(it=>({...it, _key:`${it.nama} ${it.kategori} ${it.kode_barang}`}));
+
+  if(CAT!=="ALL")arr=arr.filter(it=>(it.kategori||"").toLowerCase()===CAT.toLowerCase());
+  arr=arr.filter(it=>fuzzy(it._key,q));
+
+  if(SORT==="NAME_ASC")arr.sort((a,b)=>a.nama.localeCompare(b.nama));
+  if(SORT==="PRICE_LOW")arr.sort((a,b)=>a.harga-b.harga);
+  if(SORT==="PRICE_HIGH")arr.sort((a,b)=>b.harga-a.harga);
+  if(SORT==="STOCK_HIGH")arr.sort((a,b)=>b.stock-a.stock);
+
+  render(arr);
+}
+
+/* RENDER */
+function render(items){
+  let root=listRoot;
+  root.innerHTML="";
+  if(!items.length){
+    root.innerHTML=`<div style="text-align:center;color:#777;padding:22px">Tidak ada barang ditemukan</div>`;
+    return;
+  }
+
+  let q=searchInput.value;
+
+  items.forEach(it=>{
+    let img= (it.foto&&it.foto!=="null")?it.foto:"assets/no_image.png";
+    let d=document.createElement("div");
+    d.className="item";
+    d.id=`item-${it.id}`;
+    d.onclick=()=>{d.classList.add('bounce');setTimeout(()=>location.href=`barang_detail.html?id=${it.id}`,180);}
+    d.innerHTML=`
+      <img class="item-img" src="${esc(img)}">
+      <div class="item-info">
+        <div class="item-name">${highlight(it.nama,q)}</div>
+        <div class="item-meta">${highlight(it.kategori||"-",q)} • Rp ${Number(it.harga).toLocaleString("id-ID")}</div>
+        <div class="item-extra">Kode: ${it.kode_barang||"-"} • Stok: ${it.stock||0}</div>
+      </div>
+    `;
+    root.appendChild(d);
+  });
+}
+
+/* AUTO-SCROLL & HIGHLIGHT */
+function handleNewItemScroll(){
+  let newId=localStorage.getItem("newItemId");
+  if(!newId)return;
+
+  let el=document.getElementById(`item-${newId}`);
+  if(!el){
+    localStorage.removeItem("newItemId");
+    return;
+  }
+
+  /* FLASH effect (langsung terlihat 0.2s) */
+  el.classList.add("flash-highlight");
+  setTimeout(()=> el.classList.remove("flash-highlight"), 250);
+
+  /* SOFT highlight (fade 4 detik) */
+  el.classList.add("soft-highlight");
+
+  /* SCROLL SMOOTH agar terlihat */
+  setTimeout(()=>{
+    const list=listRoot;
+    const rect=el.getBoundingClientRect();
+    const listRect=list.getBoundingClientRect();
+    const offset=(rect.top+rect.bottom)/2 - (listRect.top+listRect.bottom)/2;
+
+    list.scrollBy({top:offset,behavior:"smooth"});
+  }, 100);
+
+  localStorage.removeItem("newItemId");
+}
+
+
+function updateHeaderTime(){
+  const el = document.getElementById("headerTime");
+  if(!el) return;
+
+  const d = new Date();
+  const hari  = d.toLocaleDateString("id-ID", { day:"2-digit" });
+  const bulan = d.toLocaleDateString("id-ID", { month:"short" });
+  const tahun = d.getFullYear();
+  const jam   = d.getHours().toString().padStart(2,"0");
+  const menit = d.getMinutes().toString().padStart(2,"0");
+
+  el.textContent = `${hari} ${bulan} ${tahun} • ${jam}.${menit}`;
+}
+updateHeaderTime();
+setInterval(updateHeaderTime, 1000);
+
+/* FAB */
+fab.onclick=()=>{
+  fab.classList.add("bounce");
+  setTimeout(()=>location.href="tambah_barang.html",200);
+};
+
+/* render hook */
+(function(){
+  const base=render;
+  render=function(items){
+    base(items);
+    setTimeout(()=>handleNewItemScroll(),80);
+  }
+})();
+</script>
+</body>
+</html>

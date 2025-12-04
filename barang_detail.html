@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Detail Barang</title>
+
+<style>
+body { margin:0; font-family:Inter,Roboto; background:#fff; }
+
+.top-wrap {
+  display:flex;
+  align-items:flex-start;
+  gap:16px;
+}
+
+.stock-box {
+  display:flex;
+  flex-direction:column;
+}
+
+.stock-label {
+  font-size:15px;
+  font-weight:700;
+  color:#555;
+  margin-bottom:4px;
+}
+
+.stock-value {
+  font-size:48px;
+  font-weight:800;
+  color:#0066ff;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg,#3E8BFF,#A259FF);
+  color:#fff;
+  padding:16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:18px;
+  font-weight:700;
+}
+
+/* CONTENT */
+.container { padding:18px; }
+
+.top-img {
+  width:220px;
+  height:220px;
+  border-radius:14px;
+  object-fit:cover;
+  background:#eee;
+}
+
+.top-name {
+  font-weight:800;
+  font-size:20px;
+  margin-top:10px;
+}
+
+.top-stock {
+  font-weight:800;
+  color:#0066ff;
+  font-size:26px;
+  margin-bottom:12px;
+}
+
+/* CARD */
+.card {
+  background:#fff;
+  padding:16px;
+  border-radius:12px;
+  border:1px solid #eee;
+  margin-top:14px;
+}
+
+.row {
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+}
+
+/* FOOTER BUTTONS */
+.footer {
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  padding:12px;
+  display:flex;
+  gap:12px;
+  background:#fff;
+  border-top:1px solid #eee;
+}
+
+.btn {
+  flex:1;
+  padding:14px 0;
+  border-radius:12px;
+  text-align:center;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-outline {
+  border:2px solid #3E8BFF;
+  color:#3E8BFF;
+}
+
+.btn-danger {
+  background:#ff3b30;
+  color:white;
+}
+
+/* === CUSTOM POPUP === */
+.popup-bg {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:200;
+}
+
+.popup-box {
+  background:#fff;
+  width:80%;
+  max-width:360px;
+  padding:20px;
+  border-radius:16px;
+  text-align:center;
+}
+
+.popup-title {
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.popup-msg {
+  font-size:14px;
+  color:#444;
+  margin-bottom:22px;
+}
+
+.popup-row {
+  display:flex;
+  gap:12px;
+}
+
+.pop-btn {
+  flex:1;
+  padding:10px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+  font-size:15px;
+}
+
+.pop-cancel { background:#e5e5e5; }
+.pop-delete { background:#ff3b30; color:#fff; }
+
+/* TOAST */
+.toast {
+  position:fixed;
+  left:50%;
+  bottom:90px;
+  transform:translateX(-50%);
+  padding:10px 18px;
+  background:#111;
+  color:#fff;
+  border-radius:12px;
+  font-size:14px;
+  display:none;
+  z-index:300;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <img src="assets/back_white.png" id="btnBack" style="width:22px;height:22px;cursor:pointer">
+  Detail Barang
+</div>
+
+<div class="container" id="content">Memuat...</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="btn btn-outline" id="btnEdit">Ubah</div>
+  <div class="btn btn-danger" id="btnDelete">Hapus</div>
+</div>
+
+<!-- POPUP -->
+<div id="popBG" class="popup-bg">
+  <div class="popup-box">
+    <div class="popup-title">Hapus Barang?</div>
+    <div class="popup-msg">Tindakan ini tidak dapat dibatalkan.</div>
+
+    <div class="popup-row">
+      <div class="pop-btn pop-cancel" id="cancelDel">Batal</div>
+      <div class="pop-btn pop-delete" id="confirmDel">Hapus</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast">Berhasil dihapus</div>
+
+<script>
+/* dipertahankan */
+const API_BASE = "https://api.bigmotor.biz.id/api";
+
+const content = document.getElementById("content");
+const url = new URLSearchParams(location.search);
+const itemId = url.get("id");
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=> t.style.display="none",1600);
+}
+
+async function loadDetail(){
+  try {
+    const res = await fetch(`${API_BASE}/barang/${itemId}`);
+    if (!res.ok) throw new Error("Fetch gagal");
+
+    const json = await res.json();
+    const data = json.item;   // ⬅⬅⬅ FIX TERPENTING
+
+    const foto =
+      data.foto && data.foto !== null && data.foto !== ""
+        ? data.foto
+        : "assets/noimg.png";
+
+    content.innerHTML = `
+  <div class="top-wrap">
+    <img src="${foto}" class="top-img">
+
+    <div class="stock-box">
+      <div class="stock-label">Stok</div>
+      <div class="stock-value">${data.stock || 0}</div>
+    </div>
+  </div>
+
+  <div class="top-name">${data.nama || "-"}</div>
+
+  <div class="card">
+    <div class="row"><div>Kode Barang</div><div>${data.kode_barang || "-"}</div></div>
+    <div class="row"><div>Kategori</div><div>${data.kategori || "-"}</div></div>
+    <div class="row"><div>Harga</div><div>Rp ${(data.harga || 0).toLocaleString("id-ID")}</div></div>
+  </div>
+`;
+  }
+  catch(e){
+    content.innerHTML = "<span style='color:red'>Gagal memuat data.</span>";
+  }
+}
+
+loadDetail();
+
+btnBack.onclick = ()=> history.back();
+btnEdit.onclick = ()=> location.href=`barang_edit.html?id=${itemId}`;
+btnDelete.onclick = ()=> popBG.style.display="flex";
+cancelDel.onclick = ()=> popBG.style.display="none";
+
+confirmDel.onclick = async ()=>{
+  try {
+    const res = await fetch(`${API_BASE}/barang/${itemId}`, { method:"DELETE" });
+    if(!res.ok) throw new Error();
+
+    showToast("Berhasil dihapus");
+    setTimeout(()=> location.href="barang.html",1200);
+  }
+  catch(e){
+    showToast("Gagal menghapus");
+  }
+};
+</script>
+
+</body>
+</html>

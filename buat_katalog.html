@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Buat Katalog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+/* --- GLOBAL --- */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  overflow-x: hidden;      /* KUNCI UTAMA */
+  max-width: 100%;         /* KUNCI */
+}
+
+/* --- SEARCH BOX --- */
+.searchBox {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  z-index: 20;
+}
+.searchBox input {
+  width: 100%;
+  box-sizing: border-box;  /* KUNCI AGAR TIDAK MELEBAR */
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 2px solid #2196f3;
+  border-radius: 8px;
+}
+
+/* --- ITEM ROW --- */
+.item {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+
+  width: 100%;
+  box-sizing: border-box;   /* ANTI LEBAR LAYAR */
+  overflow: hidden;
+  gap: 10px;
+}
+
+/* --- FOTO KIRI (diperkecil sedikit agar muat HP kecil) --- */
+.item img {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;           /* Biar tidak menekan teks */
+}
+
+/* --- CHECKBOX BESAR --- */
+.item input[type=checkbox] {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;           /* Jangan melebar */
+}
+
+/* --- TEXT CONTAINER --- */
+.item .textBox {
+  flex: 1;                  /* Supaya sisa area dipakai teks */
+  min-width: 0;             /* TANPA INI SCROLL HORIZONTAL MUNCUL */
+}
+
+/* --- TEXT --- */
+.name { font-size: 15px; font-weight: bold; white-space: normal; }
+.price { font-size: 14px; color: #d20000; margin-top: 2px; }
+.stock { font-size: 12px; color: #666; margin-top: 2px; }
+
+/* --- HIGHLIGHT SEARCH --- */
+.highlight { color: #007bff; font-weight: bold; }
+
+/* --- FLOATING BUTTON --- */
+#btnBuat {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  background: #1E88E5;
+  color: white;
+  padding: 14px 20px;
+  border-radius: 40px;
+  border: none;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  z-index: 50;
+  max-width: 80%;           /* ANTI LEWAT LAYAR */
+  box-sizing: border-box;
+}
+
+/* --- TOAST --- */
+.toast {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff3b3b;
+  padding: 12px 18px;
+  color: white;
+  border-radius: 6px;
+  opacity: 0;
+  font-size: 14px;
+  transition: 0.3s;
+  z-index: 100;
+  max-width: 90%;
+  box-sizing: border-box;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+
+<body>
+
+<div class="searchBox">
+  <input type="text" id="search" placeholder="Cari barang…">
+</div>
+
+<div id="list"></div>
+
+<button id="btnBuat">Buat Katalog</button>
+
+<div id="toast" class="toast">Gagal membuat katalog</div>
+
+<script>
+const API_BARANG  = "https://api.bigmotor.biz.id";
+const API_KATALOG = "https://msg.wendyrenzya.workers.dev";
+
+let dataBarang = [];
+
+/* Toast */
+function showToast(txt) {
+  const t = document.getElementById("toast");
+  t.innerText = txt;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+/* Highlight fuzzy */
+function hl(text, key) {
+  if (!key) return text;
+  const re = new RegExp("(" + key + ")", "gi");
+  return text.replace(re, `<span class="highlight">$1</span>`);
+}
+
+/* Render list */
+function renderList(key="") {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  key = key.toLowerCase().trim();
+
+  dataBarang.forEach(b => {
+    const match =
+      b.nama.toLowerCase().includes(key) ||
+      String(b.harga).includes(key) ||
+      String(b.stock).includes(key);
+
+    if (!match) return;
+
+    const row = document.createElement("div");
+    row.className = "item";
+
+    row.innerHTML = `
+      <input type="checkbox" value="${b.id}">
+      <img src="${b.foto || ''}" onerror="this.src='assets/noimg.png'">
+      <div class="textBox">
+        <div class="name">${hl(b.nama, key)}</div>
+        <div class="price">Rp${b.harga}</div>
+        <div class="stock">Stok: ${b.stock}</div>
+      </div>
+    `;
+
+    list.appendChild(row);
+  });
+}
+
+/* Load barang */
+async function loadBarang() {
+  const r = await fetch(API_BARANG + "/api/barang");
+  const j = await r.json();
+  dataBarang = j.items || [];
+  renderList("");
+}
+
+/* Search */
+document.getElementById("search").addEventListener("input", e => {
+  renderList(e.target.value);
+});
+
+/* Submit katalog */
+document.getElementById("btnBuat").onclick = async () => {
+  const ids = [...document.querySelectorAll("input[type=checkbox]:checked")]
+              .map(x => Number(x.value));
+
+  if (!ids.length) return showToast("Tidak ada barang dipilih");
+
+  let res;
+  try {
+    res = await fetch(API_KATALOG + "/api/katalog", {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({ items: ids })
+    });
+  } catch {
+    return showToast("Gagal terhubung");
+  }
+
+  let j = {};
+  try { j = await res.json(); } catch {}
+
+  if (!j.id_katalog) return showToast("Gagal membuat katalog");
+
+  location.href = "katalog.html?id_katalog=" + j.id_katalog;
+};
+
+loadBarang();
+</script>
+
+</body>
+</html>

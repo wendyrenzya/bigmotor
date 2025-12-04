@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bonus</title>
+
+<style>
+  :root{
+    --bg:#ffffff;
+    --card:#f7f8fb;
+    --muted:#666;
+    --text:#1b1b1b;
+
+    --rama:#1e88e5;
+    --nando:#2e7d32;
+    --firamitha:#8e24aa;
+  }
+
+  body{
+    margin:0;
+    font-family:Inter,Segoe UI,Roboto,Arial;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:40px;
+  }
+ 
+ table{
+  table-layout:fixed;
+}
+
+
+table th, table td{
+  padding:14px 4px;
+}
+
+table td:nth-child(1){ padding-right:8px; }
+table td:nth-child(2){ padding-right:8px; }
+
+table th:nth-child(1),
+table td:nth-child(1){
+  width:32%;
+}
+
+table th:nth-child(2),
+table td:nth-child(2){
+  width:22%;
+}
+
+table th:nth-child(3),
+table td:nth-child(3){
+  width:70%;
+}
+ 
+  td.status-cell{
+  display:flex;
+  justify-content:flex-start;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  width:100%;
+}
+
+  /* HEADER */
+  .header-wrap{ position:relative; }
+  .header-icon{
+    position:absolute;
+    right:14px; top:50%;
+    transform:translateY(-50%);
+    width:60px; height:auto;
+  }
+  .header{
+    background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+    padding:14px 16px;
+    border-bottom:1px solid #e6eefc;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  .h-title{font-size:18px;font-weight:800;}
+  .h-sub{font-size:14px;font-weight:600;color:var(--muted);}
+  .h-time{font-size:13px;color:var(--muted);margin-top:6px;}
+
+  /* CARD */
+  .card{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    background:var(--card);
+    padding:16px;
+    margin:14px;
+    border-radius:16px;
+  }
+  .avatar{
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    object-fit:cover;
+  }
+  .card-body{ flex:1; }
+
+  .title{font-size:17px;font-weight:800;}
+  .sub{font-size:14px;color:var(--muted);}
+
+  .progress-wrap{
+    margin-top:10px;
+    width:100%;
+    background:#e6e9f3;
+    height:16px;
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .progress-bar{
+    height:100%;
+    width:0%;
+    transition:0.3s;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:14px;
+    font-size:13px;
+  }
+  table th{
+    text-align:left;
+    color:var(--muted);
+    font-weight:700;
+    padding-bottom:4px;
+  }
+  table td{
+    padding:6px 0;
+    border-top:1px solid #eee;
+  }
+
+  /* TAG STATUS */
+  .tag{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:700;
+    margin-right:6px;
+  }
+  .tag-belum{ background:#fff3cd; color:#856404; }
+  .tag-dibayar{ background:#d4edda; color:#155724; }
+
+  .btn-paid{
+    background:#1e88e5;
+    color:white;
+    padding:4px 8px;
+    border:none;
+    border-radius:6px;
+    font-size:12px;
+    margin-left:6px;
+  }
+
+  /* MODAL */
+  .modal-bg{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+  }
+  .modal-box{
+    background:white;
+    width:90%;
+    max-width:360px;
+    border-radius:14px;
+    padding:16px;
+  }
+  input{
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ccd5e0;
+    font-size:15px;
+    box-sizing:border-box;
+    margin-top:8px;
+  }
+  .btn-save{
+    width:100%;
+    margin-top:14px;
+    background:#1e88e5;
+    color:white;
+    padding:12px;
+    font-size:16px;
+    border:none;
+    border-radius:10px;
+    font-weight:700;
+  }
+
+</style>
+
+</head>
+<body>
+
+
+<!-- HEADER -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">Progress Bonus</div>
+    <div id="headerTime" class="h-time"></div>
+    <img src="assets/bonus2.png" class="header-icon">
+  </div>
+</div>
+
+
+<div id="cards"></div>
+
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal-box">
+    <div style="font-weight:800;font-size:16px;margin-bottom:10px">Tambah Akumulasi</div>
+    <input id="inp-nilai" type="text" inputmode="numeric" placeholder="Nominal (contoh 300000)">
+    <button class="btn-save" onclick="saveAkumulasi()">Simpan</button>
+  </div>
+</div>
+
+
+<script>
+const BASE = "https://msg.wendyrenzya.workers.dev";
+
+function fmtTanggal(t){
+  const d = new Date(t);
+  return d.toLocaleDateString("id-ID", {
+    day:"2-digit",
+    month:"short",
+    year:"2-digit"
+  }).replace(".", ""); 
+}
+
+/* API */
+async function apiGET(url){ return (await fetch(url)).json(); }
+async function apiPOST(url,body){
+  return (await fetch(url,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(body)
+  })).json();
+}
+
+/* LOGIN CHECK */
+const username = localStorage.getItem("username") || "";
+const isWendy = username === "wendy";
+
+/* TARGET */
+const targetMap={
+  "rama":1000000,
+  "nando":1000000,
+  "firamitha":2000000
+};
+
+/* AVATAR */
+const avatarMap={
+  "rama":"assets/rama.jpg",
+  "nando":"assets/nando.jpg",
+  "firamitha":"assets/fira.jpg"
+};
+
+/* CARD COLORS */
+const colorMap={
+  "rama":"var(--rama)",
+  "nando":"var(--nando)",
+  "firamitha":"var(--firamitha)"
+};
+
+let activeUser=null;
+
+/* HEADER TIME */
+function updateHeaderTime(){
+  const d=new Date();
+  document.getElementById("headerTime").textContent=
+    d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})
+    +" • "+
+    d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+updateHeaderTime(); setInterval(updateHeaderTime,10000);
+
+/* INPUT ONLY NUMBER */
+document.addEventListener("input",e=>{
+  if(e.target.id==="inp-nilai"){
+    e.target.value=e.target.value.replace(/\D+/g,"");
+  }
+});
+
+/* LOAD PROGRESS */
+async function loadProgress(u){
+  const r=await apiGET(`${BASE}/api/bonus/progress/${u}`);
+  return Number(r?.progress || 0);
+}
+
+/* SAVE PROGRESS */
+async function saveProgress(u,val){
+  return apiPOST(`${BASE}/api/bonus/progress`,{username:u,progress:val});
+}
+
+/* LOAD RIWAYAT */
+async function loadRiwayat(u){
+  const r=await apiGET(`${BASE}/api/bonus/riwayat?user=${u}`);
+  return r?.items||[];
+}
+
+/* MODAL */
+function openModal(u){
+  if(!isWendy) return;
+  activeUser=u;
+  document.getElementById("modal").style.display="flex";
+}
+function closeModal(){
+  document.getElementById("modal").style.display="none";
+}
+
+/* SAVE AKUMULASI */
+async function saveAkumulasi(){
+  const raw=document.getElementById("inp-nilai").value.replace(/\D+/g,"");
+  const val=Number(raw||0);
+  if(val<=0)return;
+
+  const cur=await loadProgress(activeUser);
+  const target=targetMap[activeUser];
+
+  let next=cur+val;
+
+  if(next>=target){
+    await apiPOST(`${BASE}/api/bonus/achieved`,{
+      username:activeUser,
+      tanggal:new Date().toISOString().slice(0,10),
+      nilai:50000,
+      status:"belum"
+    });
+    next=0;
+  }
+
+  await saveProgress(activeUser,next);
+
+  closeModal();
+  renderCards();
+}
+
+/* MARK PAID */
+async function markPaid(id){
+  await apiPOST(`${BASE}/api/bonus/status`,{id,status:"paid"});
+  renderCards();
+}
+
+/* RENDER */
+async function renderCards(){
+  const root=document.getElementById("cards");
+  root.innerHTML="";
+
+  const list=[
+    {id:"rama", name:"Rama [mekanik]"},
+    {id:"nando", name:"Nando [mekanik]"},
+    {id:"firamitha", name:"firamitha [Admin]"}
+  ];
+
+  let progress={};
+  for(const p of list){
+    progress[p.id]=await loadProgress(p.id);
+  }
+
+  for(const p of list){
+    const val=progress[p.id];
+    const target=targetMap[p.id];
+    const percent=Math.floor((val/target)*100);
+    const riw=await loadRiwayat(p.id);
+
+    const color=colorMap[p.id];
+    const avatar=avatarMap[p.id];
+
+    const card=document.createElement("div");
+    card.className="card";
+    card.style.border=`2px solid ${color}`;
+    card.style.boxShadow=`0 2px 8px ${color}40`;
+
+    if(isWendy) card.onclick=()=>openModal(p.id);
+
+    card.innerHTML=`
+      <img src="${avatar}" class="avatar">
+
+      <div class="card-body">
+        <div class="title">${p.name}</div>
+        <div class="sub">${percent}%</div>
+
+        <div class="progress-wrap">
+          <div class="progress-bar" style="width:${percent}%;background:${color}"></div>
+        </div>
+
+        <div style="margin-top:8px;font-weight:700">
+          ${val.toLocaleString("id-ID")} / ${target.toLocaleString("id-ID")}
+        </div>
+
+        <table>
+          <tr><th>Tanggal</th><th>Nilai</th><th>Status</th></tr>
+          ${
+            riw.map(r=>{
+              const paid = r.status==="paid";
+              return `
+                <tr>
+                  <td>${fmtTanggal(r.tanggal)}</td>
+                  <td>${Number(r.nilai).toLocaleString("id-ID")}</td>
+                <td class="status-cell">
+  <span class="tag ${paid?'tag-dibayar':'tag-belum'}">
+    ${paid?'Dibayar':'Belum Dibayar'}
+  </span>
+
+  ${
+    !paid && isWendy
+    ? `<button class="btn-paid" onclick="event.stopPropagation();markPaid(${r.id})">Mark Paid</button>`
+    : ""
+  }
+</td>
+                </tr>`;
+            }).join("")
+          }
+        </table>
+      </div>
+    `;
+
+    root.appendChild(card);
+  }
+}
+
+renderCards();
+</script>
+</body>
+</html>

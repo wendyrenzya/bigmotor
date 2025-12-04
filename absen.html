@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Absensi</title>
+
+<style>
+  body{
+    margin:0;
+    background:#f4f5f7;
+    font-family:Inter,Segoe UI,Roboto;
+  }
+
+/* ========== HEADER STYLE DARI list_katalog.html ========== */
+.header-wrap{ position:relative; }
+
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  padding-right:90px;
+  border-bottom:1px solid #e6eefc;
+  position:sticky; top:0;
+  z-index:20;
+}
+
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:54px;
+}
+
+.h-title{
+  font-size:18px;
+  font-weight:800;
+}
+
+.h-sub{
+  font-size:14px;
+  font-weight:600;
+  color:#666;
+  margin-top:2px;
+}
+
+.h-web{
+  font-size:13px;
+  color:#666;
+  margin-top:4px;
+}
+
+  .header-wrap{ padding:22px; }
+  .header-card{
+    background:#fff;
+    border-radius:20px;
+    padding:20px 22px 24px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+    text-align:center;
+  }
+  .header-small{ font-size:13px;color:#6b7280;margin-bottom:6px; }
+  .header-title{ font-size:22px;font-weight:700;color:#111;margin-bottom:4px; }
+  .header-sub{ font-size:14px;color:#6b7280; }
+
+  .content{ padding:22px;padding-top:0; }
+
+  .btn{
+    width:100%;
+    padding:14px 22px;
+    font-size:16px;
+    font-weight:700;
+    background:#ff8a00;
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    margin:18px 0;
+  }
+  .btn[disabled]{
+    background:#d1d5db;
+    cursor:not-allowed;
+    color:#6b7280;
+  }
+
+  .card{
+    background:white;
+    padding:16px;
+    border-radius:14px;
+    box-shadow:0 1px 6px rgba(0,0,0,0.12);
+    margin-bottom:14px;
+  }
+  .row{ display:flex;align-items:center;gap:14px; }
+  .avatar{
+    width:50px;height:50px;border-radius:50%;object-fit:cover;
+    background:#eee;
+  }
+  .u{ font-weight:700;font-size:15px; }
+  .sub{ font-size:13px;color:#666; }
+
+  .overlay{
+    position:fixed;inset:0;display:none;
+    background:rgba(0,0,0,0.45);
+    justify-content:center;align-items:center;
+    z-index:9999;padding:20px;
+  }
+  .popup{
+    background:#fff;border-radius:12px;padding:18px;
+    max-width:420px;width:100%;
+    box-shadow:0 8px 30px rgba(0,0,0,0.25);
+    text-align:center;
+  }
+  .popup h3{ margin:0 0 8px;font-size:16px; }
+  .popup p{ margin:0 0 14px;color:#444; }
+  .popup .ok{
+    background:#3E8BFF;color:#fff;border:0;padding:10px 14px;
+    border-radius:8px;font-weight:700;cursor:pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<!-- HEADER -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">Absensi</div>
+    <div class="h-sub" id="headerTime"></div>
+    <div class="h-web">www.bigmotortingkulu.com</div>
+    <img src="assets/absensi.png" class="header-icon">
+  </div>
+</div>
+
+<div class="content">
+  <button id="btnAbsen" class="btn" onclick="onAbsenClick()">Absen Sekarang</button>
+  <div id="listAbsensi"></div>
+</div>
+
+<!-- POPUP -->
+<div id="overlay" class="overlay">
+  <div class="popup">
+    <h3 id="popupTitle"></h3>
+    <p id="popupMessage"></p>
+    <button class="ok" onclick="closePopup()">Tutup</button>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://api.bigmotor.biz.id";
+
+/* ============================================================
+   WITA HELPERS — gunakan waktu lokal HP (yang sudah WITA)
+============================================================ */
+function nowWITA(){
+  return new Date(); // HP sudah di WITA
+}
+function isoToWITA(iso){
+  return new Date(iso); // tampil sesuai lokal HP
+}
+function todayWITA(){
+  return nowWITA().toLocaleDateString("en-CA"); // YYYY-MM-DD
+}
+
+/* ============================================================
+   HEADER TIME
+============================================================ */
+function updateHeaderTime(){
+  const d = nowWITA();
+  const hari = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"][d.getDay()];
+  const bln = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"][d.getMonth()];
+  const tgl = d.getDate().toString().padStart(2,"0");
+  const thn = d.getFullYear();
+  const jam = d.getHours().toString().padStart(2,"0");
+  const mnt = d.getMinutes().toString().padStart(2,"0");
+  document.getElementById("headerTime").textContent =
+    `${hari}, ${tgl} ${bln} ${thn}, ${jam}:${mnt}`;
+}
+setInterval(updateHeaderTime,1000);
+updateHeaderTime();
+
+/* ============================================================
+   FORMAT WAKTU (CARD)
+============================================================ */
+function formatWaktu(iso){
+  const d = isoToWITA(iso);
+  const hari=["Min","Sen","Sel","Rab","Kam","Jum","Sab"][d.getDay()];
+  const bln=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"][d.getMonth()];
+  const tgl=d.getDate().toString().padStart(2,"0");
+  const thn=d.getFullYear().toString().slice(2);
+  const jam=d.getHours().toString().padStart(2,"0");
+  const mnt=d.getMinutes().toString().padStart(2,"0");
+  return `${hari}, ${tgl} ${bln} ${thn}, ${jam}:${mnt}`;
+}
+
+/* ============================================================
+   GPS DISTANCE
+============================================================ */
+function jarakMeter(lat1,lon1,lat2,lon2){
+  const R=6371000;
+  const dLat=(lat2-lat1)*Math.PI/180;
+  const dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+
+          Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+          Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+/* ============================================================
+   POPUP
+============================================================ */
+function showPopup(t,m){
+  document.getElementById("popupTitle").textContent=t;
+  document.getElementById("popupMessage").textContent=m;
+  document.getElementById("overlay").style.display="flex";
+}
+function closePopup(){
+  document.getElementById("overlay").style.display="none";
+}
+
+/* ============================================================
+   CACHE
+============================================================ */
+let _itemsCache = [];
+const _namaMap = {};
+const _avatarCache = new Map();
+
+/* ============================================================
+   LOAD USERS
+============================================================ */
+async function loadUsers(){
+  const res=await fetch(API_BASE+"/api/users",{
+    headers:{ "Authorization":"Bearer "+localStorage.getItem("token") }
+  });
+  if(res.ok){
+    const body=await res.json();
+    (body.users||[]).forEach(u=>{
+      _namaMap[u.username]=u.nama||u.username;
+      if(u.foto) _avatarCache.set(u.username,u.foto);
+    });
+  }
+}
+
+async function getAvatarUrl(username){
+  if(_avatarCache.has(username)) return _avatarCache.get(username);
+  const local=`assets/${username}.jpg`;
+  const def="assets/default.png";
+  const chk=await fetch(local,{method:"HEAD"}).catch(()=>({ok:false}));
+  if(chk.ok){
+    _avatarCache.set(username,local);
+    return local;
+  }
+  _avatarCache.set(username,def);
+  return def;
+}
+
+/* ============================================================
+   RENDER CARD
+============================================================ */
+function tambahCard(username,meter,waktu){
+  const wrap=document.getElementById("listAbsensi");
+  const card=document.createElement("div");
+  card.className="card";
+
+  const nama=_namaMap[username]||username;
+
+  card.innerHTML=`
+    <div class="row">
+      <img data-avatar class="avatar" src="assets/default.png">
+      <div>
+        <div class="u">${nama}</div>
+        <div class="sub">${meter} meter dari bengkel</div>
+        <div class="sub">${formatWaktu(waktu)}</div>
+      </div>
+    </div>
+  `;
+
+  wrap.prepend(card);
+
+  getAvatarUrl(username).then(url=>{
+    card.querySelector("[data-avatar]").src=url;
+  });
+}
+
+/* ============================================================
+   LAST ABSEN LOGIC
+============================================================ */
+function getLastAbsenUser(items, username){
+  const list = items.filter(x => x.username === username);
+  if(list.length === 0) return null;
+  return list[list.length - 1];
+}
+
+function isSameDayWITA(iso){
+  const d = isoToWITA(iso);
+  return d.toLocaleDateString("en-CA") === todayWITA();
+}
+
+function updateButtonState(){
+  const btn=document.getElementById("btnAbsen");
+  const user=localStorage.getItem("username");
+  const last=getLastAbsenUser(_itemsCache,user);
+
+  if(!last){
+    btn.disabled=false;
+    btn.textContent="Absen Sekarang";
+    return;
+  }
+
+  if(isSameDayWITA(last.waktu)){
+    btn.disabled=true;
+    btn.textContent="Sudah absen hari ini";
+  }else{
+    btn.disabled=false;
+    btn.textContent="Absen Sekarang";
+  }
+}
+
+/* ============================================================
+   LOAD ABSENSI
+============================================================ */
+if(!localStorage.getItem("token")){
+  alert("Belum login");
+  location.href="index.html";
+}
+
+loadUsers().then(loadAbsensi);
+
+async function loadAbsensi(){
+  const res=await fetch(API_BASE+"/api/absensi",{
+    headers:{ "Authorization":"Bearer "+localStorage.getItem("token") }
+  });
+  const data=await res.json();
+
+  _itemsCache = (data.items||[]).reverse();
+
+  document.getElementById("listAbsensi").innerHTML="";
+
+  let i=0;
+  function batch(){
+    for(let x=0;x<15 && i<_itemsCache.length;x++,i++){
+      const r=_itemsCache[i];
+      tambahCard(r.username,r.lokasi,r.waktu);
+    }
+    if(i<_itemsCache.length) requestAnimationFrame(batch);
+  }
+  batch();
+
+  updateButtonState();
+}
+
+/* ============================================================
+   AUTO UPDATE BUTTON EVERY MINUTE
+============================================================ */
+setInterval(updateButtonState,60000);
+
+/* ============================================================
+   CLICK ABSEN
+============================================================ */
+function onAbsenClick(){
+  const user=localStorage.getItem("username");
+  const last=getLastAbsenUser(_itemsCache,user);
+
+  if(last && isSameDayWITA(last.waktu)){
+    showPopup("Peringatan","Cuma perlu absen 1x sehari");
+    return;
+  }
+
+  ambilLokasiDanAbsen();
+}
+
+/* ============================================================
+   GPS
+============================================================ */
+function ambilLokasiDanAbsen(){
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const meter=Math.round(
+        jarakMeter(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          1.460978,124.853733
+        )
+      );
+      kirimAbsen(meter);
+    },
+    ()=>showPopup("Error","GPS gagal. Aktifkan lokasi."),
+    {enableHighAccuracy:true,timeout:8000}
+  );
+}
+
+/* ============================================================
+   KIRIM ABSEN
+============================================================ */
+async function kirimAbsen(meter){
+  const username=localStorage.getItem("username");
+
+  // Simpan waktu dalam UTC asli
+  const waktu = new Date().toISOString();
+
+  const res=await fetch(API_BASE+"/api/absensi",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+localStorage.getItem("token")
+    },
+    body:JSON.stringify({ username, lokasi:meter, waktu })
+  });
+
+  const data=await res.json();
+
+  if(!res.ok){
+    showPopup("Error",data.error||"Gagal mengirim absen");
+    return;
+  }
+
+  _itemsCache.push({ username, lokasi:meter, waktu });
+  tambahCard(username,meter,waktu);
+
+  updateButtonState();
+
+  showPopup("Berhasil","Absen sudah masuk record");
+}
+</script>
+
+</body>
+</html>

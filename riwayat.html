@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Big Motor Apps — Riwayat</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    
+:root{
+  --primary:#3E8BFF;
+  --muted:#6b7280;
+  --card:#fff;
+  --danger:#ff3b30;
+}
+
+/* === COLOR MAP === */
+.type-penjualan  { --c1:#007bff; }  /* biru */
+.type-servis     { --c1:#ff7f50; }  /* merah */
+.type-masuk      { --c1:#22a447; }  /* hijau */
+.type-audit      { --c1:#8e44ad; }  /* ungu */
+
+/* STRIP KIRI */
+.card .lbar{
+  width:6px;
+  border-radius:4px;
+  background:var(--c1);
+}
+
+/* TAG */
+.tx-tag{
+  background:var(--c1) !important;
+  color:#fff !important;
+}
+
+/* JUDUL */
+.card .title{
+  color:var(--c1);
+  font-weight:700;
+}
+/* HEADER */
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  text-align:left;     /* PATCH */
+  position:sticky;
+  top:0;
+  z-index:20;
+  border-bottom:1px solid #e6eefc;
+  padding-right:90px;  /* ruang gambar */
+}
+.h-title{font-size:18px;font-weight:800;}
+.h-sub{font-size:14px;font-weight:600;color:#666;margin-top:2px;}
+.h-time{font-size:13px;color:#666;margin-top:6px;}
+
+/* GLOBAL */
+*{box-sizing:border-box;-webkit-tap-highlight-color: transparent;}
+
+/* List */
+.tx-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* Card */
+.card{
+  background:var(--card);
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.06);
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.card:active{
+  transform:translateY(-3px) scale(.997);
+  box-shadow:0 14px 28px rgba(0,0,0,0.08);
+}
+
+/* Type colors */
+.type-penjualan { border-left:6px solid var(--c1); }
+.type-servis    { border-left:6px solid var(--c1); }
+.type-masuk     { border-left:6px solid var(--c1); }
+.type-audit     { border-left:6px solid var(--c1); }
+
+/* TAG PREFIX */
+.tx-tag{
+  font-size:11px;
+  font-weight:800;
+  background:#e7eeff;
+  color:#2d43af;
+  padding:2px 6px;
+  border-radius:6px;
+  margin-right:6px;
+  display:inline-block;
+}
+
+/* Avatar */
+.left{width:64px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.avatar{
+  width:56px;height:56px;border-radius:12px;
+  background:#dfe8ff;color:#1e3a8a;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:18px;
+  background-size:cover;
+  background-position:center;
+}
+
+.avatar-meta{font-size:11px;color:var(--muted)
+}
+
+/* Mid */
+.mid{flex:1;min-width:0}
+.title{
+  font-weight:800;
+  font-size:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.time{margin-top:6px;font-size:12px;color:var(--muted);}
+.items{margin-top:10px;font-size:14px;line-height:1.35;}
+.total{min-width:100px;text-align:right;font-size:15px;font-weight:900}
+
+/* Hint */
+.hint{text-align:center;color:var(--muted);margin-top:10px;font-style:italic}
+
+/* === POPUP OVERLAY CENTER === */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  z-index:99999;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* === POPUP BOX === */
+.dialog{
+  background:#fff;
+  width:100%;
+  max-width:720px;
+  max-height:88vh;
+  border-radius:16px;
+  padding:20px;
+  box-sizing:border-box;
+  overflow-y:auto;
+  overflow-x:hidden;
+  margin:auto;
+}
+
+.dialog *{
+  word-break:break-word;
+}
+
+
+
+.btn-row{display:flex;gap:10px;justify-content:space-between;margin-top:16px}
+.btn-pill{
+  flex:1;padding:10px 12px;font-weight:800;cursor:pointer;
+  border:0;border-radius:999px;
+}
+.btn-pill.primary{background:var(--primary);color:#fff}
+.btn-pill.ghost{background:#f3f5f9}
+.btn-pill.warn{background:#fff;border:1px solid #e6e6e6}
+.btn-pill.danger{background:var(--danger);color:#fff}
+
+/* === BODY FIX === */
+body{
+  margin:0;
+  padding:0;
+  padding-bottom:120px;   /* ruang untuk navbar */
+  background:#f4f5f7;
+  font-family:Inter,Segoe UI,Roboto;
+  overflow-x:hidden;      /* cegah melebar kanan */
+}
+
+/* === CONTAINER FIX === */
+.container{
+  padding:12px 16px 90px 16px;
+}
+
+/* === NAVBAR (versi stabil dari riwayat (4).html) === */
+.navbar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  height:70px;
+  background:#fff;
+  box-shadow:0 -2px 8px rgba(0,0,0,0.08);
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  z-index:9999;
+}
+
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;
+  font-size:11px;font-weight:600;padding:6px 12px;color:#6a6a6a;cursor:pointer;
+}
+.nav-item img{width:28px;height:28px;margin-bottom:4px;opacity:.65}
+.nav-active{background:rgba(62,139,255,0.12);color:var(--primary)!important}
+.nav-active img{opacity:1!important}
+
+/* Toast */
+.toast{
+  position:fixed;left:50%;bottom:86px;transform:translateX(-50%);
+  background:rgba(25,25,25,0.94);color:#fff;padding:10px 14px;
+  border-radius:10px;font-weight:700;font-size:13px;
+  opacity:0;pointer-events:none;transition:.22s;
+}
+.toast.show{
+ opacity:1;
+ transform:translateX(-50%) translateY(-6px);
+ }
+
+.header-wrap{
+  position:relative;
+}
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:60px;
+  height:auto;
+  z-index:5;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">Riwayat Transaksi</div>
+    <div id="headerTime" class="h-time"></div>
+
+    <img src="assets/riwayat2.png" class="header-icon">
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+  <div id="status" class="hint" style="display:none"></div>
+  <div id="list" class="tx-list"></div>
+  <div id="empty" class="hint" style="display:none">Tidak ada riwayat</div>
+</div>
+
+<!-- DETAIL POPUP -->
+<div id="overlayDetail" class="overlay">
+  <div class="dialog">
+    <h3 id="dlgTitle"></h3>
+    <div id="dlgMeta" class="muted"></div>
+    <div id="dlgItems"></div>
+    <div class="line" style="height:1px;background:#eef2f7;margin:12px 0"></div>
+    <div id="dlgNote" class="muted"></div>
+    <div class="line" style="height:1px;background:#eef2f7;margin:12px 0"></div>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button id="btnLihatStruk" class="btn-pill ghost" style="display:none">Lihat Struk</button>
+      <button id="btnCloseDetail" class="btn-pill ghost">Tutup</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="nav-item" onclick="bounceThenNavigate(this,'home.html')">
+    <img src="assets/beranda.png">Beranda
+  </div>
+  <div class="nav-item" onclick="bounceThenNavigate(this,'barang.html')">
+    <img src="assets/barang.png">Barang
+  </div>
+  <div class="nav-item nav-active" onclick="navBounce(this)">
+    <img src="assets/riwayat.png">Riwayat
+  </div>
+  <div class="nav-item" onclick="bounceThenNavigate(this,'pengaturan.html')">
+    <img src="assets/pengaturan.png">Pengaturan
+  </div>
+</div>
+<style>
+  /* Hindari elemen memaksa melebar */
+  .dialog *{
+    word-break:break-word;
+  }
+</style>
+<script>
+
+/* CEK LOGIN */
+const token = localStorage.getItem("token");
+if (!token) location.href = "index.html";
+
+const API_BASE="https://api.bigmotor.biz.id";
+const $=id=>document.getElementById(id);
+
+let USERMAP = {}; // simpan username -> foto
+
+// === PATCH: resolve user untuk SRV ===
+function getServisWho(svcMain){
+  if (!svcMain) return "Admin";
+  if (svcMain.diselesaikan_oleh) return svcMain.diselesaikan_oleh;
+  if (svcMain.dibuat_oleh) return svcMain.dibuat_oleh;
+  return "Admin";
+}
+
+async function loadUsers() {
+  try {
+    const r = await fetch(API_BASE + "/api/users");
+    const j = await r.json();
+    j.users.forEach(u => {
+      USERMAP[u.username] = u; 
+    });
+  } catch(e) { console.log("Gagal load users"); }
+}
+loadUsers();
+
+/* PAGINATION */
+let page=0;
+let isLoading=false;
+let done=false;
+
+/* Helper */
+function isoToLocal(s){
+  try{
+    const d=new Date(s);
+    return d.toLocaleString("id-ID",{
+      day:"2-digit",month:"short",year:"numeric",
+      hour:"2-digit",minute:"2-digit"
+    });
+  }catch{return s}
+}
+function currency(n){return "Rp "+Number(n||0).toLocaleString("id-ID");}
+function initials(n){
+  if(!n) return "GM";
+  const p=n.trim().split(/\s+/);
+  return p.length===1 ? p[0].slice(0,2).toUpperCase() : (p[0][0]+p[1][0]).toUpperCase();
+}
+function compact(n){
+  n = Number(n||0);
+  if(n>=1000000) return (Math.round(n/100000)/10).toString().replace(/\.0$/,"")+"M";
+  if(n>=1000) return Math.round(n/1000)+"K";
+  return n.toString();
+}
+
+/* CORE EXTRACTOR */
+function getCoreFromTid(tid){
+  return String(tid).replace(/^SRV-|^CHG-/, "");
+}
+
+/* TYPE DETECTOR */
+function getType(tid){
+  const s = String(tid).toUpperCase();
+  if(s.startsWith("SRV-")) return "servis";
+  if(s.startsWith("MSK-")) return "masuk";
+  if(s.startsWith("AUD-")) return "audit";
+  return "penjualan";
+}
+function classFromType(t){
+  return{
+    penjualan:"type-penjualan",
+    servis:"type-servis",
+    masuk:"type-masuk",
+    audit:"type-audit"
+  }[t];
+}
+function tagFromTid(tid){
+  const s=String(tid).toUpperCase();
+  if(s.includes("SRV"))return"SRV";
+  if(s.includes("MSK"))return"MSK";
+  if(s.includes("PJL"))return"PJL";
+  if(s.includes("AUD"))return"AUD";
+  return"TX";
+}
+
+/* LOAD RIWAYAT */
+async function loadRiwayat(){
+  if(done || isLoading) return;
+  isLoading=true;
+
+  try{
+    const r=await fetch(`${API_BASE}/api/riwayat?limit=10&offset=${page*10}`);
+    const j=await r.json();
+    const list=j.items||[];
+
+    if(list.length<10) done=true;
+
+    appendList(list);
+    page++;
+
+  }catch{
+    $("status").textContent="Gagal memuat data.";
+  }
+
+  isLoading=false;
+}
+
+/* APPEND CARD */
+function appendList(list){
+  const wrap=$("list");
+
+  if(page===0 && !list.length){
+    $("empty").style.display="block";
+    return;
+  }
+
+  list.forEach(tx=>{
+    const tid=tx.transaksi_id;
+    const waktu=tx.waktu;
+    const type=getType(tid);
+    const tag=tagFromTid(tid);
+
+    const card=document.createElement("div");
+    card.className="card "+classFromType(type);
+
+    const left=document.createElement("div");
+    left.className="left";
+
+  const av=document.createElement("div");
+av.className="avatar";
+av.textContent="";   // jangan pakai AD
+
+    const meta=document.createElement("div");
+    meta.className="avatar-meta";
+    meta.textContent="created by Admin";
+
+    left.appendChild(av);
+    left.appendChild(meta);
+
+    const mid=document.createElement("div");
+    mid.className="mid";
+
+    const title=document.createElement("div");
+    title.className="title";
+
+    title.innerHTML=
+      `<div><span class="tx-tag">${tag}</span>${
+        type==="servis"?"Servis":
+        type==="masuk"?"Stok Masuk":
+        type==="audit"?"Audit":"Penjualan"
+      }</div>`;
+
+    const total=document.createElement("div");
+    total.className="total";
+    total.textContent="—";
+
+    title.appendChild(total);
+
+    const tm=document.createElement("div");
+    tm.className="time";
+    tm.textContent=isoToLocal(waktu);
+
+    const items=document.createElement("div");
+    items.className="items";
+    items.textContent="Memuat detail...";
+
+    mid.appendChild(title);
+    mid.appendChild(tm);
+    mid.appendChild(items);
+
+    card.appendChild(left);
+    card.appendChild(mid);
+
+    card.onclick=()=>openDetail(tid);
+
+    wrap.appendChild(card);
+
+    fetchPreview(tid,av,meta,items,total);
+  });
+}
+
+
+/* PREVIEW CARD */
+async function fetchPreview(tid,av,meta,items,total){
+  try{
+
+    /* === SERVIS === */
+    if(String(tid).startsWith("SRV-")){
+      const r = await fetch(`${API_BASE}/api/riwayat/${tid}`);
+      const j = await r.json();
+
+      let listServis=[];
+      try{
+        const r2=await fetch(`${API_BASE}/api/servis`);
+        const j2=await r2.json();
+        listServis=j2.items||[];
+      }catch{}
+
+      const core=getCoreFromTid(tid);
+
+      const svcMain=listServis.find(x =>
+        x.transaksi_id &&
+        x.transaksi_id.startsWith("SRV-") &&
+        getCoreFromTid(x.transaksi_id)===core
+      )||{};
+
+      let itemsArr=[];
+      try{ itemsArr=JSON.parse(svcMain.items||"[]"); }catch{}
+
+      const totalBarang=itemsArr.reduce((a,b)=>
+        a+(Number(b.qty||b.jumlah||0)*Number(b.harga||0)),0
+      );
+
+      const biayaServis=Number(svcMain.biaya_servis||0);
+
+      const chargeList=listServis.filter(x =>
+        x.transaksi_id &&
+        x.transaksi_id.startsWith("CHG-") &&
+        getCoreFromTid(x.transaksi_id)===core
+      );
+      const totalCharge=chargeList.reduce((a,b)=>a+Number(b.biaya_servis||0),0);
+
+      items.textContent=
+        `Servis ${compact(biayaServis)} • Charge ${compact(totalCharge)} • Barang ${compact(totalBarang)}`;
+      total.textContent=currency(biayaServis+totalCharge+totalBarang);
+
+     // === PATCH: gunakan dibuat_oleh / diselesaikan_oleh dari table servis ===
+const who = getServisWho(svcMain);
+
+      meta.textContent="created by "+who;
+      if (USERMAP[who] && USERMAP[who].foto) {
+    av.style.backgroundImage = `url('${USERMAP[who].foto}')`;
+    av.style.backgroundSize = "cover";
+    av.style.backgroundPosition = "center";
+    av.textContent = "";
+} else {
+    av.textContent = initials(who);
+}
+
+      return; /* ← penting: hentikan disini */
+    }
+
+    /* === NON SERVIS === */
+    const r=await fetch(`${API_BASE}/api/riwayat/${tid}`);
+    const j=await r.json();
+
+    const who =
+      j.masuk?.[0]?.dibuat_oleh ||
+      j.keluar?.[0]?.dibuat_oleh ||
+      j.audit?.[0]?.dibuat_oleh ||
+      "Admin";
+
+    if (USERMAP[who] && USERMAP[who].foto) {
+    av.style.backgroundImage = `url('${USERMAP[who].foto}')`;
+    av.style.backgroundSize = "cover";
+    av.style.backgroundPosition = "center";
+    av.textContent = "";
+} else {
+    av.textContent = initials(who);
+}
+    meta.textContent="created by "+who;
+
+    const all=[];
+    if(j.masuk)all.push(...j.masuk);
+    if(j.keluar)all.push(...j.keluar);
+    if(j.audit)all.push(...j.audit);
+
+    if(!all.length){
+      items.textContent="Tidak ada item";
+      total.textContent="-";
+      return;
+    }
+
+    let out=[],grand=0;
+    for(let i=0;i<Math.min(all.length,3);i++){
+      const it=all[i];
+      const nm=await getNamaBarang(it.barang_id);
+
+      if(it.tipe==="audit"){
+        out.push(`${nm}: ${it.stok_lama} → ${it.stok_baru}`);
+        continue;
+      }
+
+      if(it.harga){
+        out.push(`${it.jumlah}× ${nm} @ ${currency(it.harga)}`);
+        grand+=it.harga*it.jumlah;
+      }else{
+        out.push(`${it.jumlah}× ${nm}`);
+      }
+    }
+
+    if(all.length>3) out.push(`+ ${all.length-3} item lainnya`);
+
+    items.innerHTML=out.join("<br>");
+    total.textContent=grand?currency(grand):`${all.length} item`;
+
+  }catch{
+    items.textContent="Preview gagal";
+    total.textContent="-";
+  }
+}
+
+/* GET NAMA BARANG */
+async function getNamaBarang(id){
+  try{
+    const r=await fetch(`${API_BASE}/api/barang/${id}`);
+    const j=await r.json();
+    return j.item?.nama||("Barang #"+id);
+  }catch{
+    return "Barang #"+id;
+  }
+}
+
+/* DETAIL POPUP */
+async function openDetail(tid){
+  try{
+    const r=await fetch(`${API_BASE}/api/riwayat/${tid}`);
+    const j=await r.json();
+    window.__CURRENT_DETAIL=j;
+
+    const box=$("dlgItems");
+    box.innerHTML="";
+
+    if(String(tid).startsWith("SRV-")){
+      let listServis=[];
+      try{
+        const r2=await fetch(`${API_BASE}/api/servis`);
+        const j2=await r2.json();
+        listServis=j2.items||[];
+      }catch{}
+
+      const core=getCoreFromTid(tid);
+
+      const svcMain=listServis.find(x =>
+        x.transaksi_id &&
+        x.transaksi_id.startsWith("SRV-") &&
+        getCoreFromTid(x.transaksi_id)===core
+      )||{};
+
+      let barangAsli=[];
+      try{ barangAsli=JSON.parse(svcMain.items||"[]"); }catch{}
+
+     $("dlgTitle").textContent = `Servis • ${tid}`;
+
+// === PATCH: tampilkan dibuat_oleh + diselesaikan_oleh ===
+let dibuat = svcMain.dibuat_oleh ? `Dibuat oleh: ${svcMain.dibuat_oleh}` : "Dibuat oleh: -";
+let selesai = svcMain.diselesaikan_oleh ? `Diselesaikan oleh: ${svcMain.diselesaikan_oleh}` : "Diselesaikan oleh: -";
+
+$("dlgMeta").innerHTML =
+  `${dibuat}<br>${selesai}<br>` +
+  `Teknisi: ${svcMain.teknisi || "-"} • Biaya: ${currency(svcMain.biaya_servis || 0)}`;
+
+      box.innerHTML=
+        `<div style="padding:8px 0;border-bottom:1px dashed #e8e8e8">
+           <div style='font-weight:700'>${svcMain.nama_servis||""}</div>
+           <div style='font-size:12px;color:var(--muted)'>${svcMain.catatan||""}</div>
+         </div>`;
+
+      for(const b of barangAsli){
+        const div=document.createElement("div");
+        div.style.cssText=
+          "padding:8px 0;border-bottom:1px dashed #e8e8e8;display:flex;justify-content:space-between";
+
+        let nama= `Barang #${b.id||b.id_barang||b.barang_id||""}`;
+        try{ nama=await getNamaBarang(b.id||b.id_barang||b.barang_id); }catch{}
+
+        div.innerHTML=
+          `<div>
+             <div style='font-weight:700'>${nama}</div>
+             <div style='font-size:12px;color:var(--muted)'>Barang Dipakai</div>
+           </div>
+           <div style='text-align:right'>
+             <div style='font-weight:800'>${(b.qty||b.jumlah||0)} × ${currency(b.harga||0)}</div>
+           `;
+        box.appendChild(div);
+      }
+
+      const chargeList=listServis.filter(x =>
+        x.transaksi_id &&
+        x.transaksi_id.startsWith("CHG-") &&
+        getCoreFromTid(x.transaksi_id)===core
+      );
+
+      if(chargeList.length){
+        const h=document.createElement("div");
+        h.style.cssText=
+          "padding:8px 0;border-bottom:1px solid #ddd;margin-top:12px;font-weight:700";
+        h.textContent="Charge";
+        box.appendChild(h);
+
+        for(const ch of chargeList){
+          const div=document.createElement("div");
+          div.style.cssText=
+            "padding:8px 0;border-bottom:1px dashed #e8e8e8;display:flex;justify-content:space-between";
+          div.innerHTML=
+            `<div><div style='font-weight:700'>${ch.nama_servis}</div></div>
+             <div style='text-align:right'>
+               <div style='font-weight:800'>${currency(ch.biaya_servis||0)}</div>
+             </div>`;
+          box.appendChild(div);
+        }
+      }
+
+      $("btnLihatStruk").style.display=barangAsli.length>0?"inline-block":"none";
+      $("overlayDetail").style.display="flex";
+      return;
+    }
+
+    const rows=[];
+    const who=
+      j.masuk?.[0]?.dibuat_oleh ||
+      j.keluar?.[0]?.dibuat_oleh ||
+      j.audit?.[0]?.dibuat_oleh ||
+      "Admin";
+
+    const waktu=
+      j.masuk?.[0]?.created_at ||
+      j.keluar?.[0]?.created_at ||
+      j.audit?.[0]?.created_at;
+
+    $("dlgTitle").textContent=`Detail • ${tid}`;
+    $("dlgMeta").textContent=`created by ${who} • ${isoToLocal(waktu)}`;
+
+    if(j.masuk){
+  for(const r of j.masuk){
+    rows.push({
+      jenis:"Stok Masuk",
+      nama:await getNamaBarang(r.barang_id),
+      qty:r.jumlah,
+      price:0,
+      ket:r.keterangan
+    });
+  }
+}
+
+if(j.keluar){
+  for(const r of j.keluar){
+    rows.push({
+      jenis:"Penjualan",
+      nama:await getNamaBarang(r.barang_id),
+      qty:r.jumlah,
+      price:r.harga,
+      ket:r.keterangan
+    });
+  }
+}
+
+if(j.audit){
+  for(const r of j.audit){
+    rows.push({
+      jenis:"Audit",
+      nama:await getNamaBarang(r.barang_id),
+      qty:`${r.stok_lama}→${r.stok_baru}`,
+      price:0,
+      ket:r.keterangan
+    });
+  }
+}
+   
+
+    for(const r of rows){
+      const div=document.createElement("div");
+      div.style.cssText=
+        "padding:8px 0;border-bottom:1px dashed #e8e8e8;display:flex;justify-content:space-between";
+
+      div.innerHTML=
+        `<div>
+           <div style='font-weight:700'>${r.nama}</div>
+           <div style='font-size:12px;color:var(--muted)'>${r.ket||""}</div>
+         </div>
+         <div style='text-align:right'>
+           <div style='font-weight:800'>
+             ${r.qty}${r.price?" × "+currency(r.price):""}
+           </div>
+           <div style='font-size:12px;color:var(--muted)'>${r.jenis}</div>
+         </div>`;
+      box.appendChild(div);
+    }
+
+    $("btnLihatStruk").style.display=j.keluar?.length>0?"inline-block":"none";
+    $("overlayDetail").style.display="flex";
+
+  }catch{
+    showToast("Gagal memuat detail");
+  }
+}
+
+$("btnCloseDetail").onclick=()=> $("overlayDetail").style.display="none";
+$("overlayDetail").onclick=e=>{
+  if(e.target===$("overlayDetail")) $("overlayDetail").style.display="none";
+};
+
+/* REDIRECT KE HALAMAN STRUK */
+$("btnLihatStruk").onclick = ()=>{
+  const j = window.__CURRENT_DETAIL;
+  if(!j) return showToast("Data tidak ditemukan");
+  const tid = j.transaksi_id;
+  if(!tid) return showToast("ID tidak valid");
+  location.href = "struk.html?tid=" + encodeURIComponent(tid);
+};
+
+/* Show toast */
+
+function showToast(msg){
+  let t=document.getElementById("__toast");
+  if(!t){
+    t=document.createElement("div");
+    t.id="__toast";
+    t.className="toast";
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;
+  t.classList.add("show");
+  clearTimeout(t._hide);
+  t._hide=setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+/* NAV */
+function navBounce(el){
+  el.classList.add("bounce");
+  setTimeout(()=>el.classList.remove("bounce"),260);
+}
+function bounceThenNavigate(el,url){
+  navBounce(el);
+  setTimeout(()=>location.href=url,90);
+}
+
+/* CLOCK */
+function tickHeader(){
+  const d=new Date();
+  $("headerTime").textContent=
+    d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})+
+    " • "+
+    d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+tickHeader();
+setInterval(tickHeader,1000);
+
+/* Infinite Scroll */
+window.addEventListener("scroll",()=>{
+  if(window.innerHeight+window.scrollY>=document.body.offsetHeight-200){
+    loadRiwayat();
+  }
+});
+loadRiwayat();
+</script>
+
+</body>
+</html>

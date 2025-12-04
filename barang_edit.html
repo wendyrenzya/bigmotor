@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Edit Barang — BigMotor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#f4f6fb; --card:#fff; --muted:#7b7f88;
+  --primary:#3E8BFF; --accent:#A259FF;
+  --radius:14px;
+  --shadow:0 8px 24px rgba(0,0,0,0.07);
+}
+*{box-sizing:border-box;font-family:Inter,Arial;-webkit-tap-highlight-color:transparent;}
+body{margin:0;background:var(--bg);color:#111;}
+.container{max-width:980px;margin:20px auto;padding:18px;}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.h-title{font-size:24px;font-weight:800;}
+.h-sub{font-size:13px;color:var(--muted);}
+.card{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);}
+.grid{display:grid;grid-template-columns:1fr 340px;gap:22px;}
+@media(max-width:880px){.grid{grid-template-columns:1fr;}}
+.label{margin-top:16px;margin-bottom:6px;font-weight:700;font-size:14px;}
+
+.input,textarea,.selectBox{
+  width:100%;padding:12px;border-radius:12px;
+  border:1px solid #e6e9f0;background:#fff;font-size:15px;
+}
+.textarea{min-height:120px;resize:vertical;}
+
+.selectBox{
+  display:flex;justify-content:space-between;align-items:center;
+  cursor:pointer;position:relative;
+}
+
+.preview{
+  width:100%;height:270px;border-radius:12px;
+  background:#f1f3f7;background-size:cover;background-position:center;
+  border:1px solid #eef1f7;display:flex;align-items:center;
+  justify-content:center;color:#777;font-size:14px;
+}
+
+.preview.has-img{
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px rgba(62,139,255,0.12);
+}
+
+.btn{
+  padding:11px 14px;border-radius:12px;border:0;font-weight:800;
+  background:linear-gradient(90deg,var(--primary),var(--accent));
+  color:#fff;cursor:pointer;
+}
+.btn-muted{
+  padding:10px 12px;border-radius:12px;background:#fff;
+  border:1px solid #e6e9f0;font-weight:700;cursor:pointer;
+}
+
+.kategoriGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:8px;background:#fff;padding:10px;border-radius:12px;
+  box-shadow:0 8px 24px rgba(15,30,60,0.06);
+  position:absolute;z-index:99999;
+  max-width:96vw;max-height:60vh;overflow:auto;
+}
+
+.katItem{
+  padding:10px;background:#f7f8fc;border-radius:10px;
+  text-align:center;cursor:pointer;font-weight:700;
+  border:1px solid #e6e9f0;
+}
+
+#notif{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:22px;padding:10px 14px;background:#000;color:#fff;
+  border-radius:10px;display:none;z-index:10000;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <div>
+      <div class="h-title">Edit Barang</div>
+      <div class="h-sub">Perbarui data barang</div>
+    </div>
+    <button id="btnBack" class="btn-muted">Kembali</button>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+
+      <!-- LEFT -->
+      <div>
+
+        <input id="barangId" type="hidden">
+
+        <label class="label">Nama</label>
+        <input id="nama" class="input" autocomplete="off" spellcheck="false">
+
+        <label class="label">Kategori</label>
+        <div id="kategoriSelect" class="selectBox" data-value="">
+          <span id="kategoriText">Pilih kategori</span>
+          <span>▾</span>
+        </div>
+
+        <label class="label">Harga</label>
+        <input id="harga" class="input" inputmode="numeric" placeholder="Rp 0">
+
+        <label class="label">Harga Modal</label>
+        <input id="harga_modal" class="input" inputmode="numeric" placeholder="Rp 0">
+
+        <!-- STOCK GREY + NON EDIT -->
+        <label class="label">Stock</label>
+        <input id="stock" class="input" readonly style="background:#f3f4f6;color:#777;">
+        <div style="margin-top:4px;font-size:13px;color:#777;">
+          Stok hanya bisa di audit
+        </div>
+
+        <label class="label">Deskripsi</label>
+        <textarea id="deskripsi" class="input textarea"></textarea>
+
+        <br>
+        <button id="btnSave" class="btn">Simpan Perubahan</button>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+
+        <label class="label">Preview Foto</label>
+        <div id="preview" class="preview">Tidak ada gambar</div>
+
+        <label class="label" style="margin-top:12px">Foto (URL)</label>
+        <input id="fotoUrl" class="input" autocomplete="off">
+
+        <label class="label" style="margin-top:12px">Upload</label>
+        <input id="fileInput" type="file" accept="image/*" style="display:none">
+
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button id="btnUpload" class="btn-muted" style="flex:1">Pilih File</button>
+          <button id="btnImgSearch" class="btn-muted" style="flex:1">Cari Google</button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div id="notif"></div>
+
+<!-- GOOGLE POPUP -->
+<div id="imgSearchPopup" style="
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.5);display:none;
+  align-items:center;justify-content:center;z-index:999999;">
+  
+  <div style="background:#fff;padding:16px;border-radius:14px;
+      width:90%;max-width:430px;max-height:85%;overflow:auto;">
+
+    <h3 style="margin-top:0;margin-bottom:12px">Hasil Pencarian</h3>
+
+    <div id="imgSearchList" style="
+      display:grid;gap:10px;
+      grid-template-columns:repeat(auto-fit,minmax(110px,1fr));"></div>
+
+    <button id="imgSearchClose" class="btn-muted" style="width:100%;margin-top:14px">
+      Tutup
+    </button>
+
+  </div>
+</div>
+
+<script>
+/* ==== KEYS ==== */
+const API_BASE="https://api.bigmotor.biz.id";
+const IMGBB_KEY="5b383ab30d119c897eaacce08f9554bd";
+const GOOGLE_KEY="AIzaSyDr1EolaZZgzc_EOz5Eb28g-dhChVjtw-k";
+const GOOGLE_CX ="80f83828ac61745c2";
+
+const $=id=>document.getElementById(id);
+const ITEM_ID=new URLSearchParams(location.search).get("id");
+
+/* notif */
+function showNotif(msg){
+  const n=$("notif");
+  n.innerText=msg;
+  n.style.display="block";
+  clearTimeout(n._t);
+  n._t=setTimeout(()=>n.style.display="none",1500);
+}
+
+/* preview */
+function updatePreview(url){
+  const p=$("preview");
+  if(!url){
+    p.classList.remove("has-img");
+    p.style.backgroundImage="";
+    p.innerText="Tidak ada gambar";
+    return;
+  }
+  p.classList.add("has-img");
+  p.style.backgroundImage=`url("${url}")`;
+  p.innerText="";
+}
+
+/* =========================
+   LOAD BARANG
+========================= */
+async function loadBarang(){
+  try{
+    const r=await fetch(`${API_BASE}/api/barang/${ITEM_ID}`);
+    const j=await r.json();
+    const it=j.item||{};
+
+    $("nama").value=it.nama||"";
+    $("kategoriSelect").dataset.value=it.kategori||"";
+    $("kategoriText").innerText=it.kategori||"Pilih kategori";
+
+    $("harga").dataset.raw=it.harga||"";
+    localStorage.setItem("old_harga_barang_" + ITEM_ID, it.harga || 0);
+    $("harga").value = it.harga ? "Rp "+String(it.harga).replace(/\B(?=(\d{3})+(?!\d))/g,'.'): "";
+
+    $("harga_modal").dataset.raw=it.harga_modal||"";
+    $("harga_modal").value = it.harga_modal ? "Rp "+String(it.harga_modal).replace(/\B(?=(\d{3})+(?!\d))/g,'.'): "";
+
+    $("stock").value=it.stock ?? 0;
+
+    $("deskripsi").value=it.deskripsi||"";
+
+    $("fotoUrl").value=it.foto||"";
+    updatePreview(it.foto||"");
+
+  }catch(e){
+    showNotif("Gagal memuat data");
+  }
+}
+
+/* =========================
+   KATEGORI DROPDOWN
+========================= */
+let kategoriGrid=null;
+
+async function loadKategori(){
+  const r=await fetch(API_BASE+"/api/kategori");
+  const j=await r.json();
+  const items=j.categories||[];
+
+  kategoriGrid=document.createElement("div");
+  kategoriGrid.className="kategoriGrid";
+
+  items.forEach(cat=>{
+    const it=document.createElement("div");
+    it.className="katItem";
+    it.innerText=cat;
+    it.onclick=()=>{
+      $("kategoriText").innerText=cat;
+      $("kategoriSelect").dataset.value=cat;
+      closeKategori();
+    };
+    kategoriGrid.appendChild(it);
+  });
+}
+
+function openKategori(){
+  closeKategori();
+  document.body.appendChild(kategoriGrid);
+  const rect=$("kategoriSelect").getBoundingClientRect();
+  kategoriGrid.style.left=(rect.left+window.scrollX)+"px";
+  kategoriGrid.style.top=(rect.bottom+window.scrollY+6)+"px";
+  kategoriGrid.style.minWidth=rect.width+"px";
+  setTimeout(()=>document.addEventListener("click",outsideKategori),10);
+}
+function closeKategori(){
+  if(kategoriGrid&&kategoriGrid.parentNode) kategoriGrid.remove();
+  document.removeEventListener("click",outsideKategori);
+}
+function outsideKategori(e){
+  if(!kategoriGrid.contains(e.target)&&!$("kategoriSelect").contains(e.target)){
+    closeKategori();
+  }
+}
+$("kategoriSelect").onclick=e=>{
+  e.stopPropagation();
+  if(kategoriGrid&&kategoriGrid.parentNode) closeKategori();
+  else openKategori();
+};
+
+/* =========================
+   RUPIAH FORMATTER (FIX)
+========================= */
+function installRupiah(el){
+  function fmt(r){
+    if(!r) return "";          /* FIX: boleh kosong */
+    return "Rp "+r.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  }
+  el.addEventListener("input",()=>{
+    const raw=(el.value||"").replace(/[^\d]/g,"");
+    el.dataset.raw = raw;      /* FIX: tidak paksa 0 */
+    el.value = fmt(raw);
+  });
+}
+installRupiah($("harga"));
+installRupiah($("harga_modal"));
+
+/* =========================
+   UPLOAD IMGBB
+========================= */
+$("btnUpload").onclick=()=>$("fileInput").click();
+$("fileInput").addEventListener("change", async e=>{
+  const f=e.target.files[0];
+  if(!f) return;
+
+  const fd=new FormData();
+  fd.append("image",f);
+
+  try{
+    const r=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{
+      method:"POST",body:fd
+    });
+    const j=await r.json();
+    const url=j?.data?.url||j?.data?.display_url;
+    if(url){
+      $("fotoUrl").value=url;
+      updatePreview(url);
+      showNotif("✔ Upload berhasil");
+    } else showNotif("Upload gagal");
+  }catch(_){
+    showNotif("Upload gagal");
+  }
+
+  $("fileInput").value="";
+});
+
+/* =========================
+   GOOGLE IMAGE
+========================= */
+$("btnImgSearch").onclick=async()=>{
+  const name=$("nama").value.trim();
+  const cat=$("kategoriSelect").dataset.value||"";
+
+  if(!name){ showNotif("Isi nama dulu"); return; }
+
+  const keyword=name+(cat?" "+cat:"");
+
+  $("imgSearchPopup").style.display="flex";
+  const list=$("imgSearchList");
+  list.innerHTML="Mencari foto dari Google…";
+
+  const url=
+    `https://www.googleapis.com/customsearch/v1?searchType=image&num=10&safe=off&gl=id&hl=id`+
+    `&q=${encodeURIComponent(keyword)}`+
+    `&key=${GOOGLE_KEY}`+
+    `&cx=${GOOGLE_CX}`;
+
+  try{
+    const r=await fetch(url);
+    const j=await r.json();
+    const imgs=(j.items||[]).map(x=>x.link);
+
+    if(!imgs.length){
+      list.innerHTML="<div style='padding:15px;text-align:center;color:#777'>Tidak ada hasil.</div>";
+      return;
+    }
+
+    list.innerHTML="";
+    imgs.forEach(u=>{
+      const img=document.createElement("img");
+      img.src=u;
+      img.style.width="100%";
+      img.style.borderRadius="10px";
+      img.style.cursor="pointer";
+      img.onclick=()=>{
+        $("fotoUrl").value=u;
+        updatePreview(u);
+        $("imgSearchPopup").style.display="none";
+        showNotif("✔ Foto dipilih");
+      };
+      list.appendChild(img);
+    });
+
+  }catch(e){
+    list.innerHTML="<div style='padding:15px;text-align:center;color:#777'>Terjadi kesalahan.</div>";
+  }
+};
+$("imgSearchClose").onclick=()=> $("imgSearchPopup").style.display="none";
+
+
+function showConfirmLocal(message){
+  return new Promise(resolve=>{
+    const modal=$("confirmModal");
+    $("confirmModalMsg").innerText=message;
+    modal.style.display="flex";
+
+    $("confirmYesBtn").onclick=()=>{
+      modal.style.display="none";
+      resolve(true);
+    };
+    $("confirmNoBtn").onclick=()=>{
+      modal.style.display="none";
+      resolve(false);
+    };
+  });
+}
+
+async function logHargaChange(nama, hargaLama, hargaBaru){
+  const user = localStorage.getItem("nama")
+            || localStorage.getItem("username")
+            || "Unknown";
+
+  const text =
+    `[HARGA] ${nama}: `+
+    `${Number(hargaLama).toLocaleString("id-ID")} → `+
+    `${Number(hargaBaru).toLocaleString("id-ID")} `+
+    `(oleh ${user})`;
+
+  try{
+    await fetch(API_BASE + "/api/message",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text})
+    });
+  }catch(e){}
+}
+
+/* =========================
+   SIMPAN (PUT)
+========================= */
+$("btnSave").onclick = async () => {
+
+  const hargaBaru = Number($("harga").dataset.raw || 0);
+  const hargaLama = Number(localStorage.getItem("old_harga_barang_" + ITEM_ID) || 0);
+
+  // KONFIRMASI JIKA HARGA BERUBAH
+  if(hargaBaru !== hargaLama){
+    const ok = await showConfirmLocal(
+      `Harga berubah dari ${hargaLama.toLocaleString("id-ID")} → ${hargaBaru.toLocaleString("id-ID")}. Simpan perubahan?`
+    );
+    if(!ok) return; // user batal
+  }
+
+  const payload={
+    nama:$("nama").value.trim(),
+    kategori:$("kategoriSelect").dataset.value||"",
+    harga: hargaBaru,
+    harga_modal:Number($("harga_modal").dataset.raw||0),
+    deskripsi:$("deskripsi").value.trim(),
+    foto:$("fotoUrl").value.trim()
+  };
+
+  if(!payload.nama || !payload.kategori || !payload.harga){
+    showNotif("Lengkapi field wajib");
+    return;
+  }
+
+  try{
+    const r = await fetch(`${API_BASE}/api/barang/${ITEM_ID}`,{
+      method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    const j = await r.json();
+
+    if(j.ok){
+
+      // HANYA KIRIM MESSAGE JIKA HARGA BERUBAH
+      if(hargaBaru !== hargaLama){
+        await logHargaChange(payload.nama, hargaLama, hargaBaru);
+      }
+
+      // update harga lama agar konsisten jika user edit ulang
+      localStorage.setItem("old_harga_barang_" + ITEM_ID, hargaBaru);
+
+      localStorage.setItem("newItemId", ITEM_ID);
+      showNotif("✔ Tersimpan");
+      setTimeout(()=>location.href="barang.html",600);
+
+    } else {
+      showNotif("Gagal menyimpan");
+    }
+
+  }catch(_){
+    showNotif("Gagal menyimpan");
+  }
+};
+
+/* back */
+$("btnBack").onclick=()=>history.back();
+
+/* init */
+loadKategori();
+loadBarang();
+</script>
+
+<!-- CONFIRM MODAL -->
+<div id="confirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:center;justify-content:center;z-index:20000;">
+  <div style="background:#fff;padding:16px;border-radius:12px;width:92%;max-width:420px;">
+    <div id="confirmModalMsg" style="font-weight:800;margin-bottom:12px">Konfirmasi</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button id="confirmNoBtn" class="btn-muted" style="flex:0">Tidak</button>
+      <button id="confirmYesBtn" class="btn" style="flex:0">Ya, Simpan</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

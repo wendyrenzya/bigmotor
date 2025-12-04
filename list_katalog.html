@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Daftar Katalog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+html, body{
+  margin:0;
+  padding:0;
+  background:#f4f4f4;
+  font-family:Inter, Arial, sans-serif;
+  overflow-x:hidden;
+}
+
+/* ======================
+   HEADER (SAMA SEPERTI katalog.html)
+   ====================== */
+.header-wrap{ position:relative; }
+
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  padding-right:90px;
+  border-bottom:1px solid #e6eefc;
+  position:sticky; top:0;
+  z-index:20;
+}
+
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:54px;
+}
+
+.h-title{
+  font-size:18px;
+  font-weight:800;
+}
+
+.h-sub{
+  font-size:14px;
+  font-weight:600;
+  color:#666;
+  margin-top:2px;
+}
+
+.h-web{
+  font-size:13px;
+  color:#666;
+  margin-top:4px;
+}
+
+/* ======================
+   CARD LIST
+   ====================== */
+.list{ padding:14px; }
+
+.card{
+  background:white;
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.12);
+  width:100%;
+  box-sizing:border-box;
+  position:relative;
+}
+
+.katalogID{
+  font-size:16px;
+  font-weight:800;
+  color:#1e88e5;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.pencil{
+  width:16px;
+  opacity:0.7;
+}
+
+.date{
+  font-size:13px;
+  color:#666;
+  margin-top:6px;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:12px;
+}
+
+.btn{
+  flex:1;
+  padding:10px 0;
+  font-size:14px;
+  border:none;
+  border-radius:6px;
+  color:white;
+  cursor:pointer;
+}
+
+.copyBtn{ background:#2196f3; }
+.delBtn { background:#d32f2f; }
+
+/* ======================
+   FAB
+   ====================== */
+.fabAdd{
+  position:fixed;
+  bottom:22px; right:22px;
+  width:58px; height:58px;
+  background:#1e88e5; color:white;
+  border:none; border-radius:50%;
+  font-size:32px; line-height:58px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.28);
+  z-index:200;
+}
+
+.fabHome{
+  position:fixed;
+  bottom:22px; left:22px;
+  width:58px; height:58px;
+  background:#fffff;
+  border:none; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.28);
+  z-index:200;
+}
+.fabHome img{
+  width:28px; height:28px;
+}
+
+/* ======================
+   TOAST
+   ====================== */
+.toast{
+  position:fixed;
+  bottom:22px; left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:rgba(33,150,243,0.92);
+  backdrop-filter:blur(6px);
+  padding:12px 18px; color:white;
+  border-radius:10px;
+  font-size:14px;
+  opacity:0;
+  transition:all .35s ease;
+  z-index:300;
+}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+/* ======================
+   POPUP RENAME
+   ====================== */
+.popup-bg{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.35);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:400;
+}
+
+.popup{
+  background:white;
+  width:80%;
+  max-width:330px;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.25);
+}
+
+.pop-title{
+  font-size:17px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+.pop-input{
+  width:100%;
+  padding:10px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  font-size:15px;
+  box-sizing:border-box; /* FIX WIDTH */
+}
+
+.pop-actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+
+.pop-btn{
+  flex:1;
+  padding:10px 0;
+  border:none;
+  border-radius:8px;
+  font-size:15px;
+  font-weight:700;
+}
+
+.pop-cancel{ background:#ccc; }
+.pop-save  { background:#1e88e5; color:white; }
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">Daftar Katalog</div>
+    <div class="h-web">www.bigmotortingkulu.com</div>
+    <img src="assets/katalog2.png" class="header-icon">
+  </div>
+</div>
+
+<div id="list" class="list">Memuat...</div>
+
+<!-- FAB ADD -->
+<button class="fabAdd" onclick="location.href='buat_katalog.html'">+</button>
+
+<!-- FAB HOME -->
+<button class="fabHome" onclick="location.href='home.html'">
+  <img src="assets/beranda.png">
+</button>
+
+<div id="toast" class="toast"></div>
+
+<!-- POPUP -->
+<div id="popupBg" class="popup-bg">
+  <div class="popup">
+    <div class="pop-title">Rename Katalog</div>
+    <input id="renameInput" class="pop-input" placeholder="Nama katalog (opsional)">
+    <div class="pop-actions">
+      <button class="pop-btn pop-cancel" onclick="closePopup()">Batal</button>
+      <button class="pop-btn pop-save" onclick="saveRename()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://msg.wendyrenzya.workers.dev";
+let renameID = "";
+
+/* Toast */
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.innerText=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),1800);
+}
+
+/* Popup */
+function openPopup(ev,id){
+  ev.stopPropagation();
+  renameID = id;
+  document.getElementById("renameInput").value = "";
+  document.getElementById("popupBg").style.display="flex";
+}
+function closePopup(){
+  document.getElementById("popupBg").style.display="none";
+}
+
+/* Save rename */
+async function saveRename(){
+  const name = document.getElementById("renameInput").value.trim();
+
+  const r = await fetch(API + "/api/katalog_name/" + renameID,{
+    method:"PUT",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ nama_katalog:name })
+  });
+
+  let j={}; try{ j = await r.json(); }catch{}
+
+  if(!j.ok) return toast("Gagal menyimpan");
+
+  toast("Nama disimpan");
+  closePopup();
+  loadList();
+}
+
+/* Copy URL */
+function copyURL(id,ev){
+  ev.stopPropagation();
+  const fullURL = location.origin + "/katalog.html?id_katalog=" + id;
+  navigator.clipboard.writeText(fullURL);
+  toast("URL disalin");
+}
+
+/* Delete */
+async function deleteKatalog(id,ev){
+  ev.stopPropagation();
+  if(!confirm("Hapus katalog "+id+"?")) return;
+
+  const r = await fetch(API + "/api/katalog/" + id,{method:"DELETE"});
+  let j={}; try{ j=await r.json(); }catch{}
+
+  if(!j.ok) return toast("Gagal menghapus");
+
+  toast("Katalog dihapus");
+  loadList();
+}
+
+/* Load list */
+async function loadList(){
+  const container=document.getElementById("list");
+  container.innerHTML="Memuat...";
+
+  let data;
+  try{
+    const r=await fetch(API + "/api/katalog_list");
+    data=await r.json();
+  }catch{
+    container.innerHTML="Gagal memuat data";
+    return;
+  }
+
+  const items=data.items||[];
+  if(!items.length){
+    container.innerHTML="Tidak ada katalog";
+    return;
+  }
+
+  container.innerHTML="";
+
+  items.forEach(row=>{
+    const id=row.id_katalog;
+    const name = row.nama_katalog?.trim() ? row.nama_katalog : id;
+    const url="katalog.html?id_katalog="+id;
+
+    const div=document.createElement("div");
+    div.className="card";
+    div.addEventListener("click",()=>location.href=url);
+
+    div.innerHTML=`
+      <div class="katalogID">
+        ${name}
+        <img src="assets/pencil.png" class="pencil" onclick="openPopup(event,'${id}')">
+      </div>
+
+      <div class="date">${row.created_at||""}</div>
+
+      <div class="actions">
+        <button class="btn copyBtn" onclick="copyURL('${id}',event)">Copy URL</button>
+        <button class="btn delBtn" onclick="deleteKatalog('${id}',event)">Hapus</button>
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+loadList();
+</script>
+
+</body>
+</html>

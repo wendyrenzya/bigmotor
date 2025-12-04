@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Detail Servis • BigMotor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#f6f8fb;--card:#fff;--primary:#1976f7;--accent:#3E8BFF;--muted:#6b7280;
+  --success:#16a34a;--danger:#dc2626;--shadow:0 12px 26px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,-apple-system;}
+body{background:var(--bg);padding-bottom:160px;-webkit-font-smoothing:antialiased}
+
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;text-align:center;position:sticky;top:0;z-index:20;
+  border-bottom:1px solid #e6eefc;
+}
+.h-title{font-size:18px;font-weight:800;}
+.h-sub{font-size:14px;font-weight:600;color:#666;margin-top:2px;}
+.h-time{font-size:13px;color:#666;margin-top:6px;}
+
+.container{padding:0 14px}
+
+.card{
+  background:var(--card);border-radius:14px;
+  padding:16px;margin-top:14px;
+  box-shadow:var(--shadow);
+}
+
+.status-badge{
+  padding:6px 10px;border-radius:999px;font-weight:800;
+  width:max-content;font-size:12px;margin-top:10px
+}
+.st-ongoing{background:#dbeafe;color:#1e40af;}
+.st-selesai{background:#dcfce7;color:#166534;}
+.st-batal{background:#fee2e2;color:#b91c1c;}
+
+.table{width:100%;margin-top:10px;border-collapse:collapse}
+.th{
+  font-weight:800;font-size:13px;color:#444;
+  border-bottom:1px solid #e6e6e6;padding:8px 4px
+}
+.td{
+  padding:8px 4px;font-size:14px;
+  border-bottom:1px solid #f0f0f0;
+}
+.td-right{text-align:right}
+
+.btn{
+  padding:10px 12px;border-radius:10px;font-weight:800;
+  border:0;font-size:14px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-edit{background:#fff;border:1px solid #ddd;color:#111}
+.btn-success{background:var(--success);color:#fff}
+.btn.disabled{opacity:.5;pointer-events:none}
+.btn.bounce{transition:transform .12s cubic-bezier(.2,.8,.2,1)}
+.btn.bounce:active{transform:scale(.96)}
+
+.fab-back{
+  position:fixed;left:18px;bottom:24px;width:58px;height:58px;
+  border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--primary));
+  display:flex;justify-content:center;align-items:center;
+  box-shadow:0 8px 26px rgba(0,0,0,.15);z-index:999
+}
+.fab-back img{width:22px;height:22px;filter:invert(1)}
+
+.popup-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;align-items:center;justify-content:center;
+  z-index:20000
+}
+.popup-box{
+  background:#fff;padding:16px;border-radius:12px;
+  width:94%;max-width:420px
+}
+
+.input{
+  width:100%;padding:10px;border-radius:8px;
+  border:1px solid #ddd;font-size:14px;margin-top:8px
+}
+
+.confirm-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;align-items:center;justify-content:center;
+  z-index:21000
+}
+.confirm-box{
+  background:#fff;padding:16px;border-radius:12px;
+  width:94%;max-width:360px
+}
+
+.toast{
+  position:fixed;bottom:22px;left:50%;
+  transform:translateX(-50%);
+  background:#111;color:#fff;padding:10px 16px;
+  border-radius:999px;opacity:0;pointer-events:none;
+  transition:.25s;z-index:50000
+}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(-6px)
+}
+
+.small-muted{font-size:13px;color:var(--muted)}
+.charge-item{
+  border:1px dashed #e6e6e6;border-radius:8px;
+  padding:8px;margin-top:8px
+}
+
+.row{display:flex;gap:8px;align-items:center}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="h-title">Detail Servis</div>
+  <div class="h-sub">BIG Motor Tingkulu</div>
+  <div id="headerTime" class="h-time"></div>
+</div>
+
+<div class="container">
+  <div id="summaryCard" class="card">Memuat...</div>
+
+  <div id="actionTop" class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
+    <div style="display:flex;gap:8px">
+      <button id="btnAddCharge" class="btn btn-primary bounce">+ Charge</button>
+      <button id="btnAddBarang" class="btn" style="background:#0b78e6;color:#fff" onclick="goAddItem()">+ Barang</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:800;font-size:16px">Barang Dipakai</div>
+    <table class="table" id="itemTable"></table>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:800;font-size:16px">Charge Tambahan</div>
+      <div class="small-muted">Transaksi CHG</div>
+    </div>
+    <div id="chargeList" style="margin-top:10px">
+      <div class="small-muted">Memuat charge...</div>
+    </div>
+  </div>
+
+  <div class="card" id="actionBox"></div>
+</div>
+
+<div class="fab-back" onclick="goBack()">
+  <img src="assets/back.png">
+</div>
+
+<!-- POPUP CHARGE -->
+<div id="popupCharge" class="popup-bg">
+  <div class="popup-box">
+    <div style="font-weight:800;margin-bottom:8px">Pilih Kategori Charge</div>
+
+    <div id="chargeOptions" style="display:flex;flex-direction:column;gap:10px">
+      <label><input type="radio" name="chg" value="5000" data-label="Tanpa Pembelian"> Charge Tanpa Pembelian — Rp 5.000</label>
+      <label><input type="radio" name="chg" value="10000" data-label="Bawa Barang Luar"> Charge Barang Luar — Rp 10.000</label>
+      <label><input type="radio" name="chg" value="15000" data-label="Lion Aki"> Charge Lion Aki — Rp 15.000</label>
+      <label><input type="radio" name="chg" value="15000" data-label="Las"> Charge Las — Rp 15.000</label>
+      <label><input type="radio" name="chg" value="0" data-label="Lain-lain"> Custom</label>
+    </div>
+
+    <input id="chargeCustomInput" class="input" placeholder="Masukkan nominal (Rp)" style="display:none" inputmode="numeric">
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+      <button id="cancelCharge" class="btn btn-edit bounce">Batal</button>
+      <button id="confirmCharge" class="btn btn-primary bounce">Tambah Charge</button>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP Edit Biaya -->
+<div id="popupEdit" class="popup-bg">
+  <div class="popup-box">
+    <div style="font-weight:800;margin-bottom:8px">Edit Biaya Servis</div>
+    <input id="editBiaya" class="input"
+       inputmode="numeric"
+       placeholder="Rp 0"
+       autocomplete="off"
+       autocorrect="off"
+       autocapitalize="off"
+       spellcheck="false">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+      <button id="cancelEditBiaya" class="btn btn-edit bounce">Batal</button>
+      <button id="saveEditBiaya" class="btn btn-primary bounce">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP Batal -->
+<div id="popupBatal" class="popup-bg">
+  <div class="popup-box">
+    <div style="font-weight:800;margin-bottom:8px">Alasan Pembatalan</div>
+    <textarea id="alasanBatal" class="input" style="height:96px" placeholder="Masukkan alasan..."></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+      <button id="cancelBatalBtn" class="btn btn-edit bounce">Batal</button>
+      <button id="confirmBatalBtn" class="btn btn-danger bounce">Batalkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM POPUP -->
+<div id="confirmBg" class="confirm-bg">
+  <div class="confirm-box">
+    <div id="confirmText" style="font-weight:800"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button id="confirmNo" class="btn btn-edit bounce">Tidak</button>
+      <button id="confirmYes" class="btn btn-primary bounce">Ya</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API_BASE = "https://api.bigmotor.biz.id";
+const $ = id => document.getElementById(id);
+const ID = Number(new URLSearchParams(location.search).get("id"));
+let DATA = null;
+let CHARGES = [];
+
+function getCORE(){
+  if (!DATA || !DATA.transaksi_id) return "";
+  return DATA.transaksi_id.replace("SRV-", "");
+}
+
+function onBatal(){
+  openPopup("popupBatal");
+}
+
+function updateTime(){
+  const d = new Date();
+  $("headerTime").textContent =
+    d.toLocaleString("id-ID",{day:"2-digit",month:"short",year:"numeric"}) +
+    " • " +
+    d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+updateTime();
+setInterval(updateTime,10000);
+
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),1800);
+}
+
+function fmt(n){ return "Rp " + Number(n||0).toLocaleString("id-ID"); }
+
+async function loadDetail(){
+  $("summaryCard").innerHTML = "Memuat...";
+
+  try{
+    const r = await fetch(API_BASE + "/api/servis/" + ID);
+    const j = await r.json();
+    DATA = j.item || null;
+
+    if(DATA?.items?.length){
+      const resolved = await resolveItemNames(DATA.items);
+      resolved.forEach((it,idx)=>{
+        DATA.items[idx].nama = it.nama;
+      });
+    }
+
+    await loadCharges();
+
+    renderSummary();
+    renderItems();
+    renderCharges();
+    renderActions();
+    updateActionTopVisibility();
+
+  }catch(e){
+    $("summaryCard").innerHTML="<div class='small-muted'>Gagal memuat data</div>";
+  }
+}
+
+/* ============================================================
+   LOAD CHARGES (patched)
+============================================================ */
+async function loadCharges(){
+  CHARGES = [];
+  try{
+    const r = await fetch(API_BASE + "/api/servis");
+    const j = await r.json();
+    const list = j.items || [];
+    const core = getCORE();
+
+    CHARGES = list.filter(s =>
+      s.transaksi_id &&
+      s.transaksi_id.startsWith("CHG-") &&
+      (
+        s.transaksi_id.replace("CHG-", "") === core ||
+        s.id_servis === ID
+      ) &&
+      s.status !== "batal"
+    );
+  }catch(e){
+    CHARGES = [];
+  }
+}
+
+/* ============================================================
+   ITEM NAME RESOLVER
+============================================================ */
+async function resolveItemNames(items){
+  return Promise.all(items.map(async(it)=>{
+    try{
+      const r = await fetch(API_BASE + "/api/barang/" + it.id);
+      const j = await r.json();
+      it.nama = j.item?.nama || "(Tidak ditemukan)";
+    }catch{
+      it.nama = "(Gagal memuat)";
+    }
+    return it;
+  }));
+}
+
+/* ============================================================
+   RENDER SUMMARY
+============================================================ */
+function renderSummary(){
+  if(!DATA){
+    $("summaryCard").innerHTML="<div class='small-muted'>Tidak ditemukan</div>";
+    return;
+  }
+  const st = DATA.status==="ongoing" ? ["st-ongoing","Sedang Berjalan"] :
+             DATA.status==="selesai" ? ["st-selesai","Selesai"] :
+             ["st-batal","Dibatalkan"];
+
+  $("summaryCard").innerHTML = `
+    <div style="font-weight:800;font-size:18px">${DATA.nama_servis}</div>
+    <div class="small-muted" style="margin-top:6px">Teknisi: ${DATA.teknisi||"-"}</div>
+    <div class="small-muted" style="margin-top:4px">${DATA.created_at}</div>
+
+    <div class="status-badge ${st[0]}">${st[1]}</div>
+
+    ${DATA.status === "batal" && DATA.alasan_batal ? `
+      <div style="margin-top:10px;color:#b91c1c;font-weight:700">
+        Alasan Batal:
+        <span style="font-weight:600">${DATA.alasan_batal}</span>
+      </div>
+    ` : ""}
+
+    <div style="margin-top:12px;font-weight:700">Biaya Servis: ${fmt(DATA.biaya_servis)}</div>
+    <div style="margin-top:10px;color:var(--muted);white-space:pre-line">${DATA.catatan||""}</div>
+  `;
+}
+
+/* ============================================================
+   RENDER ITEMS
+============================================================ */
+function renderItems(){
+  const root = $("itemTable");
+
+  if(!DATA?.items?.length){
+    root.innerHTML = `<tr><td class="td">Tidak ada barang</td></tr>`;
+    return;
+  }
+
+  root.innerHTML = `
+    <tr>
+      <td class="th">Nama</td>
+      <td class="th td-right">Harga</td>
+      <td class="th td-right">Qty</td>
+      <td class="th td-right">Subtotal</td>
+    </tr>
+  `;
+
+  for(const it of DATA.items){
+    root.innerHTML += `
+      <tr>
+        <td class="td">${it.nama}</td>
+        <td class="td td-right">${fmt(it.harga)}</td>
+        <td class="td td-right">${it.qty}</td>
+        <td class="td td-right">${fmt(it.harga * it.qty)}</td>
+      </tr>
+    `;
+  }
+}
+
+/* ============================================================
+   RENDER CHARGES
+============================================================ */
+function renderCharges(){
+  const div = $("chargeList");
+  if(!CHARGES.length){
+    div.innerHTML = `<div class="small-muted">Belum ada charge</div>`;
+    return;
+  }
+
+  const isLocked = (DATA.status !== "ongoing");
+
+  div.innerHTML = "";
+  CHARGES.forEach(c=>{
+    div.innerHTML += `
+      <div class="charge-item">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">${c.nama_servis}</div>
+          <div style="font-weight:800">${fmt(c.biaya_servis)}</div>
+        </div>
+        <div class="small-muted" style="margin-top:6px">ID: ${c.transaksi_id}</div>
+        ${
+          isLocked
+            ? ""
+            : `<div style="margin-top:8px">
+                <button class="btn btn-danger bounce" onclick="deleteCharge(${c.id_servis})">Hapus</button>
+               </div>`
+        }
+      </div>
+    `;
+  });
+}
+
+/* ============================================================
+   ACTIONS
+============================================================ */
+function updateActionTopVisibility(){
+  $("actionTop").style.display = (DATA && DATA.status==="ongoing") ? "flex" : "none";
+}
+
+function renderActions(){
+  const box = $("actionBox");
+
+  if(DATA.status==="selesai"){
+    box.innerHTML=`<div class="small-muted" style="text-align:center">Servis telah diselesaikan</div>`;
+    return;
+  }
+  if(DATA.status==="batal"){
+    box.innerHTML=`<div class="small-muted" style="text-align:center">Servis telah dibatalkan</div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button id="btnEditBiaya" class="btn btn-edit bounce"
+              style="border:1px solid var(--primary);color:var(--primary)">Edit Biaya Servis</button>
+      <button id="btnSelesai" class="btn btn-success bounce">Selesaikan Servis</button>
+      <button id="btnBatal" class="btn btn-danger bounce">Batalkan Servis</button>
+    </div>
+  `;
+
+  $("btnEditBiaya").onclick = ()=>openEditBiaya();
+  $("btnSelesai").onclick  = ()=>onSelesai();
+  $("btnBatal").onclick    = ()=>onBatal();
+}
+
+/* ============================================================
+   POPUP HELPERS
+============================================================ */
+function openPopup(id){ $(id).style.display="flex"; }
+function closePopup(id){ $(id).style.display="none"; }
+
+/* ============================================================
+   EDIT BIAYA
+============================================================ */
+function openEditBiaya(){
+  $("editBiaya").dataset.raw = String(DATA.biaya_servis||"0");
+  $("editBiaya").value = DATA.biaya_servis ? fmt(DATA.biaya_servis) : "";
+  openPopup("popupEdit");
+  setTimeout(()=>$("editBiaya").focus(),60);
+}
+
+$("editBiaya").oninput = function(){
+  const raw = this.value.replace(/\D+/g,"");
+  this.dataset.raw = raw;
+  this.value = raw ? "Rp "+raw.replace(/\B(?=(\d{3})+(?!\d))/g,".") : "";
+};
+
+$("saveEditBiaya").onclick = async()=>{
+  const raw = $("editBiaya").dataset.raw || "0";
+  try{
+    await fetch(API_BASE+"/api/servis/update_cost/"+ID,{
+      method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ biaya_servis:Number(raw) })
+    });
+    toast("Biaya diperbarui");
+    closePopup("popupEdit");
+    await loadDetail();
+  }catch(e){
+    toast("Gagal menyimpan");
+  }
+};
+
+$("cancelEditBiaya").onclick = ()=>closePopup("popupEdit");
+$("cancelBatalBtn").onclick = () => closePopup("popupBatal");
+/* ============================================================
+   CHARGE
+============================================================ */
+$("btnAddCharge").onclick = ()=>openPopup("popupCharge");
+$("cancelCharge").onclick = ()=>{ closePopup("popupCharge"); $("chargeCustomInput").style.display="none"; };
+
+document.querySelectorAll('input[name="chg"]').forEach(r=>{
+  r.onchange = ()=>{
+    if(r.value==="0"){
+      $("chargeCustomInput").style.display="block";
+      $("chargeCustomInput").focus();
+    }else{
+      $("chargeCustomInput").style.display="none";
+    }
+  };
+});
+
+$("confirmCharge").onclick = async()=>{
+  const sel = Array.from(document.querySelectorAll('input[name="chg"]')).find(r=>r.checked);
+  if(!sel) return toast("Pilih charge");
+
+  let nominal = Number(sel.value);
+  let label = sel.dataset.label;
+
+  if(nominal===0){
+    const raw = $("chargeCustomInput").value.replace(/\D+/g,"");
+    if(!raw) return toast("Isi nominal");
+    nominal = Number(raw);
+    label = "Charge Custom";
+  }
+
+  closePopup("popupCharge");
+
+  const payload = {
+    transaksi_id: "CHG-" + getCORE(),
+    nama_servis: "CHARGE - " + label,
+    teknisi: DATA.teknisi || "CHG",
+    biaya_servis: nominal,
+    catatan: "",
+    items: []
+  };
+
+  try{
+    await fetch(API_BASE+"/api/servis",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    toast("Charge ditambahkan");
+    await loadCharges();
+    renderCharges();
+  }catch(e){
+    toast("Gagal");
+  }
+};
+
+/* ============================================================
+   DELETE CHARGE
+============================================================ */
+async function deleteCharge(id){
+  $("confirmText").textContent=`Hapus charge ini?`;
+  openConfirm(async()=>{
+    $("confirmYes").classList.add("disabled");
+    try{
+      const res = await fetch(`${API_BASE}/api/servis/charge/batal/${id}`,{
+        method:"PUT"
+      });
+      if(!res.ok) throw new Error();
+      await new Promise(r=>setTimeout(r,200));
+      await loadDetail();
+      toast("Charge dihapus");
+    }catch(e){
+      toast("Gagal menghapus");
+    }
+    closeConfirm();
+    $("confirmYes").classList.remove("disabled");
+  });
+}
+
+function openConfirm(fn){
+  $("confirmBg").style.display="flex";
+  $("confirmNo").onclick = ()=>closeConfirm();
+  $("confirmYes").onclick = fn;
+}
+function closeConfirm(){ $("confirmBg").style.display="none"; }
+
+/* ============================================================
+   BATAL SERVIS (patched PUT)
+============================================================ */
+$("confirmBatalBtn").onclick = ()=>{
+  const alasan = $("alasanBatal").value.trim();
+  if(!alasan) return toast("Isi alasan");
+
+  $("confirmText").textContent = "Batalkan servis ini?";
+
+  // PENTING: Pastikan tombol "Ya" execute batal
+  $("confirmYes").onclick = async ()=>{
+    $("confirmYes").classList.add("disabled");
+
+    try{
+      await fetch(API_BASE+"/api/servis/batal/"+ID,{
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          alasan,
+          dibatalkan_oleh: localStorage.getItem("username") || "Admin"
+        })
+      });
+
+      await fetch(API_BASE+"/api/servis/alasan/"+ID,{
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ alasan })
+      });
+
+      toast("Servis dibatalkan");
+      closePopup("popupBatal");
+      closeConfirm();
+      await loadDetail();
+
+    }catch(e){
+      toast("Gagal");
+      closeConfirm();
+    }
+
+    $("confirmYes").classList.remove("disabled");
+  };
+
+  $("confirmBg").style.display="flex";
+};
+
+/* ============================================================
+   SELESAIKAN SERVIS (FINAL PATCH)
+   — TANPA BARANG → SKIP /stok_keluar
+============================================================ */
+async function onSelesai(){
+
+  if((!DATA.items||DATA.items.length===0) && CHARGES.length===0){
+    return toast("Wajib Charge Rp 5.000 jika tanpa barang");
+  }
+
+  if(Number(DATA.biaya_servis||0)===0){
+    toast("Isi biaya servis");
+    openEditBiaya();
+    return;
+  }
+
+  const key = "stok_done_" + ID;
+
+  /* =============================
+     **TANPA BARANG → SKIP stok keluar**
+  ============================= */
+  if (DATA.items.length === 0){
+    await markDone();
+    localStorage.setItem(key,"1");
+    toast("Servis diselesaikan");
+    await loadDetail();
+    return;
+  }
+
+  /* =============================
+     JIKA ADA BARANG → stok_keluar tetap dijalankan
+  ============================= */
+  disableButtons(true);
+
+  try{
+    const allItems = (DATA.items || []).map(it => ({
+      id: it.id,
+      jumlah: it.qty,
+      harga: it.harga,
+      keterangan: ""
+    }));
+
+    const res = await fetch(API_BASE + "/api/stok_keluar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+  transaksi_id: DATA.transaksi_id,
+  items: allItems,
+  dibuat_oleh: localStorage.getItem("username") || "Admin"
+})
+    });
+
+    if(!res.ok){
+      throw new Error("Server " + res.status);
+    }
+
+    let js = {};
+    try{ js = await res.json(); }catch{ js = {}; }
+
+    if(js.error){
+      throw new Error(js.error);
+    }
+
+    markDone().catch(()=>{});
+    localStorage.setItem(key,"1");
+    toast("Servis diselesaikan");
+
+    setTimeout(()=>{ loadDetail(); }, 500);
+
+  }catch(e){
+    console.error(e);
+    toast("Gagal: " + (e.message || ""));
+  }
+
+  disableButtons(false);
+}
+
+function disableButtons(b){
+  document.querySelectorAll("#actionBox .btn, #actionTop .btn")
+    .forEach(el=>el.classList.toggle("disabled",b));
+}
+
+async function markDone(){
+ await fetch(API_BASE+"/api/servis/selesai/"+ID,{
+  method:"PUT",
+  headers:{ "Content-Type":"application/json" },
+  body: JSON.stringify({
+    diselesaikan_oleh: localStorage.getItem("username") || "Guest"
+  })
+});
+}
+
+/* ============================================================
+   NAV
+============================================================ */
+function goAddItem(){ location.href="add_item.html?id="+ID; }
+function goBack(){ location.href="servis.html"; }
+
+loadDetail();
+</script>
+
+</body>
+</html>

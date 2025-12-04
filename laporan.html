@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laporan • BigMotor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#f4f5f7;
+  --card:#ffffff;
+  --primary:#3E8BFF;
+  --muted:#6b7280;
+  --danger:#ef4444;
+  --success:#16a34a;
+  --radius:14px;
+  --shadow:0 8px 24px rgba(0,0,0,0.06);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui;-webkit-tap-highlight-color:transparent}
+
+body{
+  background:var(--bg);
+  padding-bottom:40px;
+  color:#111;
+}
+
+/* HEADER */
+.header{
+  background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
+  padding:14px 16px;
+  text-align:left;
+  border-bottom:1px solid #e6eefc;
+  position:sticky;top:0;z-index:20;
+  padding-right:90px; /* PATCH */
+}
+.h-title{font-size:18px;font-weight:800}
+.h-sub{font-size:14px;font-weight:600;color:#666;margin-top:4px}
+.h-time{font-size:13px;color:#666;margin-top:6px}
+
+.container{padding:16px;max-width:980px;margin:auto}
+
+/* CARD */
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:var(--shadow);
+  margin-bottom:14px;
+}
+.card-title{
+  font-weight:800;
+  font-size:15px;
+  margin-bottom:10px;
+}
+
+/* METRIC 3 BOX */
+.metrics3{display:flex;gap:8px;margin-top:12px}
+.metric3{
+  flex:1;
+  background:#fbfdff;
+  border:1px solid #e6ecff;
+  border-radius:10px;
+  padding:6px 8px;
+  min-width:0;
+}
+.metric3 .label{
+  font-size:11px;
+  font-weight:700;
+  color:var(--muted);
+}
+.metric3 .value{
+  font-size:13px;       /* dari 15 → 13 (lebih ramping) */
+  font-weight:800;
+  margin-top:2px;
+  letter-spacing:-0.3px; /* memperkecil lebar tanpa merusak angka */
+  white-space:nowrap;    /* WAJIB → mencegah pindah baris */
+}
+
+/* PIE SMALL */
+.chart{
+  width:100%;
+  height:150px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* MINI PIE LEGEND */
+.pieLegend{
+  margin-top:6px;
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  flex-wrap:wrap;
+  font-size:11px;
+  font-weight:700;
+  color:#555;
+}
+.pieLegend .item{
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.pieLegend .dot{
+  width:10px;
+  height:10px;
+  border-radius:3px;
+}
+
+/* SUMMARY HARIAN */
+.metric{
+  flex:1;
+  min-width:140px;
+  background:#fbfdff;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #edf3ff;
+}
+.metric .label{font-size:12px;color:var(--muted);font-weight:700}
+.metric .value{font-size:15px;font-weight:900;margin-top:4px}
+.metrics{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.clickable{cursor:pointer}
+
+/* BAR CHART — COLUMN DATE LEFT */
+.dayRow{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:8px;
+}
+.dayCol{
+  width:55px;
+  font-size:11px;
+  font-weight:800;
+  color:#444;
+  text-align:right;
+}
+.dayBox{
+  flex:1;
+  background:#fdfdff;
+  border:1px solid #e8ecff;
+  border-radius:10px;
+  padding:6px 8px;
+}
+.bar{
+  height:6px;
+  border-radius:3px;
+  margin-bottom:5px;
+}
+
+/* GLOBAL BAR LEGEND */
+.barLegend{
+  display:flex;
+  gap:12px;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
+.barLegend .item{
+  display:flex;gap:6px;align-items:center;font-size:12px;font-weight:700;color:#444;
+}
+.barLegend .sw{
+  width:12px;height:12px;border-radius:3px;
+}
+
+/* HINT */
+.hint{text-align:center;color:var(--muted);padding:14px}
+
+/* FAB HOME */
+.fab-home{
+  position:fixed;
+  bottom:20px;
+  left:20px;
+  width:54px;
+  height:54px;
+  background:rgba(255,255,255,0.85);
+  border:none;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,0.28);
+  backdrop-filter:blur(4px);
+  cursor:pointer;
+  z-index:200;
+}
+  
+.fab-home img{
+  width:28px;
+  height:28px;
+  object-fit:contain;
+  opacity:0.9;
+}
+
+.header-wrap{
+  position:relative;
+}
+.header-icon{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:60px;
+  height:auto;
+  z-index:5;
+}
+</style>
+</head>
+
+<body>
+<script>
+  const token = localStorage.getItem("token");
+  if (!token) location.href = "index.html";
+</script>
+
+<div class="header-wrap">
+  <div class="header">
+    <div class="h-title">BIG Motor Tingkulu</div>
+    <div class="h-sub">Laporan</div>
+    <div id="headerTime" class="h-time"></div>
+
+    <img src="assets/lapor.png" class="header-icon">
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 1: PIE BULANAN -->
+ <div class="card">
+    <div class="card-title">Ringkasan Bulanan</div>
+
+    <div id="pieChart" class="chart"></div>
+
+    <!-- MINI LEGEND CENTER -->
+    <div class="pieLegend">
+      <div class="item"><div class="dot" style="background:#3E8BFF"></div>Penjualan</div>
+      <div class="item"><div class="dot" style="background:#FFD56E"></div>Charge</div>
+      <div class="item"><div class="dot" style="background:#ef4444"></div>Pengeluaran</div>
+    </div>
+
+    <div class="metrics3">
+      <div class="metric3">
+        <div class="label">Pemasukan</div>
+        <div id="totalPemasukan" class="value">Rp 0</div>
+      </div>
+      <div class="metric3">
+        <div class="label">Pengeluaran</div>
+        <div id="totalPengeluaran" class="value">Rp 0</div>
+      </div>
+      <div class="metric3">
+        <div class="label">Profit</div>
+        <div id="totalProfit" class="value">Rp 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY HARIAN -->
+<div class="card clickable" onclick="location.href='laporan_harian.html'">
+  <div class="card-title">Laporan Harian</div>
+
+  <div style="display:flex; align-items:center; gap:16px;">
+    
+    <div style="flex:1;">
+      <div class="metric">
+        <div class="label">Penjualan</div>
+        <div id="dailyPenjualan" class="value">Rp 0</div>
+      </div>
+
+      <div class="metric" style="margin-top:10px;">
+        <div class="label">Pengeluaran</div>
+        <div id="dailyPengeluaran" class="value">Rp 0</div>
+      </div>
+    </div>
+
+    <div id="dailyDonut" class="chart" style="width:130px; height:130px;"></div>
+
+  </div>
+
+  <div id="dailyNote" style="margin-top:10px;color:var(--muted);font-size:12px"></div>
+</div>
+  <!-- BAR CHART -->
+  <div class="card">
+    <div class="card-title">Grafik Mingguan</div>
+
+    <div class="barLegend">
+      <div class="item"><div class="sw" style="background:#3E8BFF"></div>Penjualan</div>
+      <div class="item"><div class="sw" style="background:#ef4444"></div>Pengeluaran</div>
+      <div class="item"><div class="sw" style="background:#16a34a"></div>Profit</div>
+    </div>
+
+    <div id="barChart"></div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE="https://api.bigmotor.biz.id";
+const $=id=>document.getElementById(id);
+
+function currency(n){return "Rp "+Number(n||0).toLocaleString("id-ID")}
+
+function updateHeaderTime(){
+  const d=new Date();
+  $("headerTime").textContent=
+    d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})+
+    " • "+d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+updateHeaderTime();
+setInterval(updateHeaderTime,10000);
+
+/* PIE */
+function drawPie(el,vals,colors){
+  el.innerHTML="";
+  const total=vals.reduce((a,b)=>a+b,0)||1;
+  const size=el.clientHeight;
+  const cx=size/2,cy=size/2,r=size/2-6;
+  let ang=-Math.PI/2;
+  const NS="http://www.w3.org/2000/svg";
+  const svg=document.createElementNS(NS,"svg");
+  svg.setAttribute("width",size);
+  svg.setAttribute("height",size);
+
+  vals.forEach((v,i)=>{
+    const a=(v/total)*Math.PI*2;
+    const x1=cx+r*Math.cos(ang);
+    const y1=cy+r*Math.sin(ang);
+    const x2=cx+r*Math.cos(ang+a);
+    const y2=cy+r*Math.sin(ang+a);
+    const large=a>Math.PI?1:0;
+    const p=document.createElementNS(NS,"path");
+    p.setAttribute("fill",colors[i]);
+    p.setAttribute("d",`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`);
+    svg.appendChild(p);
+    ang+=a;
+  });
+
+  el.appendChild(svg);
+}
+
+function drawDonut(el, vals, colors){
+  el.innerHTML = "";
+  const total = vals.reduce((a,b)=>a+b,0) || 1;
+  const size = el.clientHeight;
+  const cx = size/2, cy = size/2, r = size/2 - 10, innerR = r * 0.55;
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", size);
+  svg.setAttribute("height", size);
+
+  let ang = -Math.PI/2;
+
+  vals.forEach((v,i)=>{
+    const a = (v/total) * Math.PI*2;
+    const x1 = cx + r * Math.cos(ang);
+    const y1 = cy + r * Math.sin(ang);
+    const x2 = cx + r * Math.cos(ang + a);
+    const y2 = cy + r * Math.sin(ang + a);
+    const large = a > Math.PI ? 1 : 0;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("fill", colors[i]);
+    path.setAttribute(
+      "d",
+      `M ${x1} ${y1}
+       A ${r} ${r} 0 ${large} 1 ${x2} ${y2}
+       L ${cx + innerR*Math.cos(ang + a)} ${cy + innerR*Math.sin(ang + a)}
+       A ${innerR} ${innerR} 0 ${large} 0 ${cx + innerR*Math.cos(ang)} ${cy + innerR*Math.sin(ang)}
+       Z`
+    );
+    svg.appendChild(path);
+    ang += a;
+  });
+
+  el.appendChild(svg);
+}
+
+/* BAR CHART */
+function drawBarBoxes(el,days,pen,out,prof){
+  el.innerHTML="";
+
+  const max=Math.max(...pen,...out,...prof,1);
+
+  days.forEach((day,i)=>{
+    const row=document.createElement("div");
+    row.className="dayRow";
+
+    const dateCol=document.createElement("div");
+    dateCol.className="dayCol";
+    dateCol.textContent=fmt(day);
+    row.appendChild(dateCol);
+
+    const box=document.createElement("div");
+    box.className="dayBox";
+
+    [["#3E8BFF",pen[i]],["#ef4444",out[i]],["#16a34a",prof[i]]].forEach(([color,val])=>{
+      const bar=document.createElement("div");
+      bar.className="bar";
+      bar.style.background=color;
+      bar.style.width=(val/max*100)+"%";
+      box.appendChild(bar);
+    });
+
+    row.appendChild(box);
+    el.appendChild(row);
+  });
+}
+
+/* Format tanggal → 26-Jan */
+function fmt(str){
+  const d=parseInt(str.slice(0,2));
+  const m=parseInt(str.slice(3));
+  const months=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agt","Sep","Okt","Nov","Des"];
+  return d+"-"+months[m-1];
+}
+
+async function loadBulanan(){
+  const today=new Date();
+  const month=today.toISOString().slice(0,7);
+
+  try{
+    const r=await fetch(`${API_BASE}/api/laporan/bulanan?bulan=${month}`);
+    const j=await r.json();
+    const pemasukan=j.total_penjualan+j.total_charge;
+    $("totalPemasukan").textContent=currency(pemasukan);
+    $("totalPengeluaran").textContent=currency(j.total_pengeluaran);
+    $("totalProfit").textContent=currency(pemasukan-j.total_pengeluaran);
+    drawPie(
+      $("pieChart"),
+      [j.total_penjualan,j.total_charge,j.total_pengeluaran],
+      ["#3E8BFF","#FFD56E","#ef4444"]
+    );
+  }catch{}
+}
+
+async function loadSummary(){
+  try{
+    const today = new Date().toISOString().slice(0,10);
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+
+    const r = await fetch(`${API_BASE}/api/laporan/harian?start=${today}&end=${tomorrow}`);
+    const json = await r.json();
+
+    // backend memakai { items: [...] }
+    const arr = json.items || [];
+
+    if(arr.length === 0){
+      $("dailyNote").textContent = "Tidak ada data harian";
+      return;
+    }
+
+    const row = arr[0];
+
+    const penjualan   = Number(row.penjualan)   || 0;
+    const pengeluaran = Number(row.pengeluaran) || 0;
+
+    $("dailyPenjualan").textContent   = currency(penjualan);
+    $("dailyPengeluaran").textContent = currency(pengeluaran);
+
+    drawDonut(
+      $("dailyDonut"),
+      [penjualan, pengeluaran],
+      ["#3E8BFF", "#ef4444"]
+    );
+
+    $("dailyNote").textContent = "Tanggal: " + row.tanggal;
+
+  }catch(err){
+    $("dailyNote").textContent = "Gagal memuat";
+    console.error(err);
+  }
+}
+
+async function load7Hari(){
+  try{
+    const end=new Date();
+    const start=new Date();
+    start.setDate(start.getDate()-6);
+    const d=start.toISOString().slice(0,10);
+    const s=end.toISOString().slice(0,10);
+
+    const r=await fetch(`${API_BASE}/api/laporan/harian?start=${d}&end=${s}`);
+    const json=await r.json();
+    const arr=json.items || [];   // ← FIX WAJIB
+
+    const tags = arr.map(x => {
+      const parts = (x.tanggal || "").split("-");
+      const day = (parts[2] || "").padStart(2, "0");
+      const month = (parts[1] || "").padStart(2, "0");
+      return day + "-" + month;
+    });
+
+    const pen=arr.map(x=>x.penjualan);
+    const out=arr.map(x=>x.pengeluaran);
+    const prof=pen.map((v,i)=>v-out[i]);
+
+    drawBarBoxes($("barChart"),tags,pen,out,prof);
+  }catch{}
+}
+function refreshAll(){
+  loadBulanan();
+  loadSummary();
+  load7Hari();
+}
+
+/* INIT */
+(function(){
+  refreshAll();
+})();
+</script>
+<div class="fab-home" onclick="location.href='home.html'">
+  <img src="/assets/beranda.png">
+</div>
+</body>
+</html>

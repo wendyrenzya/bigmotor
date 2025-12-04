@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Big Motor Apps — Login</title>
+
+<style>
+  body{
+    margin:0;
+    background:#f4f5f7;
+    font-family:Inter,Segoe UI,Roboto;
+    color:#222;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    height:100dvh;    /* FIX */
+    padding:0;        /* FIX */
+    overflow:hidden;  /* FIX */
+  }
+
+  .login-box{
+    width:100%;
+    max-width:360px;
+    background:#fff;
+    padding:26px 22px 28px;
+    border-radius:14px;
+    box-shadow:0 4px 16px rgba(0,0,0,0.12);
+    position:relative;
+  }
+
+  .logo{
+    width:110px;
+    display:block;
+    margin:0 auto 16px;
+  }
+
+  .title{
+    font-size:20px;
+    font-weight:800;
+    text-align:center;
+    margin-bottom:24px;
+    color:#ff8a00;
+  }
+
+  .input-group{
+    margin-bottom:14px;
+    text-align:left;
+  }
+
+  .input-group label{
+    font-size:14px;
+    font-weight:600;
+    color:#444;
+  }
+
+  .input-group input{
+    width:100%;
+    padding:12px;
+    margin-top:6px;
+    font-size:15px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    box-sizing:border-box;
+  }
+
+  .password-wrap{
+    position:relative;
+  }
+
+  .toggle-pass{
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:13px;
+    color:#666;
+    cursor:pointer;
+    user-select:none;
+  }
+
+  .btn-login{
+    width:100%;
+    padding:14px;
+    font-size:15px;
+    font-weight:700;
+    background:#ff8a00;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    margin-top:10px;
+    transition:.15s;
+  }
+
+  .btn-login:active{
+    transform:scale(.97);
+  }
+
+  .btn-disabled{
+    background:#c9c9c9 !important;
+    cursor:not-allowed !important;
+  }
+
+  .error-text{
+    color:#d50000;
+    font-size:13px;
+    margin-top:14px;
+    text-align:center;
+    display:none;
+  }
+
+  @keyframes shake {
+    0%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-6px)}
+    80%{transform:translateX(6px)}
+    100%{transform:translateX(0)}
+  }
+  .shake{
+    animation:shake .36s ease;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="login-box" id="loginBox">
+
+  <img src="assets/logo.png" class="logo">
+
+  <div class="title">Big Motor Apps</div>
+
+  <div class="input-group">
+    <label>Username</label>
+    <input id="usernameInput" autocomplete="username">
+  </div>
+
+  <div class="input-group">
+    <label>Password</label>
+
+    <div class="password-wrap">
+      <input id="passwordInput" type="password" autocomplete="current-password">
+      <span class="toggle-pass" onclick="togglePassword()">Show</span>
+    </div>
+  </div>
+
+  <button id="loginBtn" class="btn-login" onclick="doLogin()">Login</button>
+
+  <div class="error-text" id="errorBox">Username atau password salah</div>
+
+</div>
+
+<script>
+const API_BASE = "https://api.bigmotor.biz.id";
+let isLoading = false;
+
+function togglePassword(){
+  const inp = document.getElementById("passwordInput");
+  const tgl = document.querySelector(".toggle-pass");
+
+  if(inp.type === "password"){
+    inp.type = "text";
+    tgl.textContent = "Hide";
+  } else {
+    inp.type = "password";
+    tgl.textContent = "Show";
+  }
+}
+
+async function doLogin(){
+  if(isLoading) return;
+
+  const username = document.getElementById("usernameInput").value.trim();
+  const password = document.getElementById("passwordInput").value.trim();
+  const errorBox = document.getElementById("errorBox");
+  const btn = document.getElementById("loginBtn");
+  const box = document.getElementById("loginBox");
+
+  errorBox.style.display = "none";
+
+  if(!username || !password){
+    errorBox.textContent = "Harap isi username dan password";
+    errorBox.style.display = "block";
+    box.classList.add("shake");
+    setTimeout(()=>box.classList.remove("shake"), 400);
+    return;
+  }
+
+  isLoading = true;
+  btn.classList.add("btn-disabled");
+  btn.textContent = "Mengirim...";
+
+  try{
+    const res = await fetch(API_BASE + "/api/login", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok || !data.ok || !data.token){
+      errorBox.textContent = data.error || "Username atau password salah";
+      errorBox.style.display = "block";
+
+      box.classList.add("shake");
+      setTimeout(()=>box.classList.remove("shake"), 400);
+
+      btn.classList.remove("btn-disabled");
+      btn.textContent = "Login";
+      isLoading = false;
+      return;
+    }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("username", data.username || username);
+    localStorage.setItem("nama", data.nama || "");
+    localStorage.setItem("role", data.role || "");
+
+    location.href = "home.html";
+
+  }catch(e){
+    errorBox.textContent = "Error koneksi";
+    errorBox.style.display = "block";
+
+    box.classList.add("shake");
+    setTimeout(()=>box.classList.remove("shake"), 400);
+
+    btn.classList.remove("btn-disabled");
+    btn.textContent = "Login";
+    isLoading = false;
+  }
+}
+</script>
+
+</body>
+</html>
