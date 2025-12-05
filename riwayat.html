@@ -187,29 +187,58 @@ body{
 .container{
   padding:12px 16px 90px 16px;
 }
-
-/* === NAVBAR (versi stabil dari riwayat (4).html) === */
+/* ========== NAVBAR (COPY PERSIS dari pengaturan.html) ========== */
 .navbar{
   position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  height:70px;
+  bottom:0;left:0;right:0;
   background:#fff;
-  box-shadow:0 -2px 8px rgba(0,0,0,0.08);
   display:flex;
   justify-content:space-around;
-  align-items:center;
-  z-index:9999;
+  padding:8px 0 6px;
+  border-top:1px solid #e6e6e6;
+  box-shadow:0 -3px 10px rgba(0,0,0,0.06);
+  z-index:999;
 }
 
 .nav-item{
-  display:flex;flex-direction:column;align-items:center;
-  font-size:11px;font-weight:600;padding:6px 12px;color:#6a6a6a;cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  font-size:11px;
+  font-weight:600;
+  padding:6px 12px;
+  border-radius:16px;
+  cursor:pointer;
+  color:#6a6a6a;
+  transition:.15s;
 }
-.nav-item img{width:28px;height:28px;margin-bottom:4px;opacity:.65}
-.nav-active{background:rgba(62,139,255,0.12);color:var(--primary)!important}
-.nav-active img{opacity:1!important}
+
+.nav-item img{
+  width:28px;height:28px;margin-bottom:4px;
+  opacity:.65;
+}
+
+.nav-active{
+  background:rgba(62,139,255,0.12);
+  color:#3E8BFF!important;
+}
+
+.nav-active img{
+  opacity:1!important;
+}
+
+/* bounce */
+.bounce{animation:bounceTap .25s ease-out}
+@keyframes bounceTap{
+  0%{transform:scale(1)}
+  40%{transform:scale(.92)}
+  100%{transform:scale(1)}
+}
+/* Paksa teks navbar mengikuti pengaturan.html */
+.nav-item span{
+  font-size:11px !important;
+  line-height:1.2;
+}
 
 /* Toast */
 .toast{
@@ -282,16 +311,19 @@ body{
 <!-- NAVBAR -->
 <div class="navbar">
   <div class="nav-item" onclick="bounceThenNavigate(this,'home.html')">
-    <img src="assets/beranda.png">Beranda
+    <img src="assets/beranda.png"><span>Beranda</span>
   </div>
+
   <div class="nav-item" onclick="bounceThenNavigate(this,'barang.html')">
-    <img src="assets/barang.png">Barang
+    <img src="assets/barang.png"><span>Barang</span>
   </div>
+
   <div class="nav-item nav-active" onclick="navBounce(this)">
-    <img src="assets/riwayat.png">Riwayat
+    <img src="assets/riwayat.png"><span>Riwayat</span>
   </div>
+
   <div class="nav-item" onclick="bounceThenNavigate(this,'pengaturan.html')">
-    <img src="assets/pengaturan.png">Pengaturan
+    <img src="assets/pengaturan.png"><span>Fitur</span>
   </div>
 </div>
 <style>

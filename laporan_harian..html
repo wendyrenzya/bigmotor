@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Laporan Harian • BigMotor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f5f7;
+  --card:#fff;
+  --primary:#1560ff;
+  --muted:#6b7280;
+  --radius:12px;
+  --shadow:0 8px 20px rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+body{margin:0;background:var(--bg);padding-bottom:120px}
+.header{position:sticky;top:0;background:linear-gradient(90deg,#eaf2ff,#f7fbff);padding:14px 16px;border-bottom:1px solid #e6eefc;z-index:30}
+.h-title{font-weight:700;font-size:18px}
+.h-sub{color:var(--muted);font-size:13px;margin-top:6px}
+.h-time{color:var(--muted);font-size:13px;margin-top:6px}
+.container{max-width:980px;margin:12px auto;padding:0 12px}
+.card{background:var(--card);border-radius:var(--radius);padding:14px;margin:14px 0;box-shadow:var(--shadow)}
+.card-title{font-weight:700;margin-bottom:8px}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-top:0;font-size:14px}
+.row:first-of-type{border-top:0}
+.userBox{display:flex;align-items:center;gap:10px;margin-top:8px}
+.userBox img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.fab{position:fixed;right:22px;bottom:22px;width:62px;height:62px;border-radius:999px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 10px 24px rgba(0,0,0,0.18);cursor:pointer;z-index:60}
+.popup-bg{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:70}
+.popup{width:92%;max-width:420px;background:#fff;border-radius:12px;padding:16px}
+.popup-title{font-weight:800;margin-bottom:12px}
+.field{margin-bottom:10px}
+label{display:block;font-size:13px;color:#333;margin-bottom:6px;font-weight:600}
+.inp{width:100%;padding:10px;border-radius:10px;border:1px solid #e2e8f0;font-size:14px}
+.inp[disabled]{background:#f3f4f6;color:#374151;font-weight:700}
+.row-strong{font-weight:800}
+.btn{width:100%;padding:11px;border-radius:10px;border:0;background:var(--primary);color:#fff;font-weight:800;margin-top:8px}
+.btn-ghost{background:#6b7280}
+.note{font-size:12px;color:#6b7280;margin-top:8px}
+.loading{padding:22px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="h-title">BIG Motor Tingkulu</div>
+  <div class="h-sub">Laporan Harian</div>
+  <div id="headerTime" class="h-time"></div>
+</div>
+
+<div class="container" id="listRoot">
+  <div class="loading">Memuat...</div>
+</div>
+
+<div class="fab" title="Tambah" onclick="openPopup()">+</div>
+
+<!-- POPUP -->
+<div id="popupBg" class="popup-bg" onclick="if(event.target===this) closePopup()">
+  <div class="popup" role="dialog" aria-modal="true">
+    <div class="popup-title">Tambah Laporan Harian</div>
+
+    <div class="field">
+      <label for="penjualanTotal">Penjualan Total (dari penjualan)</label>
+      <input id="penjualanTotal" class="inp" disabled />
+    </div>
+
+    <div class="field">
+      <label for="penjualanCash">Penjualan Cash (otomatis)</label>
+      <input id="penjualanCash" class="inp" disabled />
+    </div>
+
+    <div class="field">
+      <label for="penjualanTransfer">Penjualan QR / Transfer (input)</label>
+      <input id="penjualanTransfer" class="inp" placeholder="Rp 0" />
+    </div>
+
+    <div class="field">
+      <label for="pengeluaran">Pengeluaran Hari Ini (dari pengeluaran)</label>
+      <input id="pengeluaran" class="inp" disabled />
+    </div>
+
+    <div class="field">
+      <label for="uangAngin">Uang Angin (input)</label>
+      <input id="uangAngin" class="inp" placeholder="Rp 0" />
+    </div>
+
+    <div class="field">
+      <label for="chargeServis">Charge Servis (input)</label>
+      <input id="chargeServis" class="inp" placeholder="Rp 0" />
+    </div>
+
+    <div class="note">Pastikan nominal sudah sesuai sebelum menyimpan.</div>
+
+    <button class="btn" onclick="save()">Simpan</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="closePopup()">Batal</button>
+  </div>
+</div>
+
+<script>
+const API = "https://api.bigmotor.biz.id";
+const API_NEW = "https://msg.wendyrenzya.workers.dev";
+// API baru untuk meniru cara laporan.html mengambil penjualan harian
+const API_LAPORAN = "https://api.bigmotor.biz.id";
+
+const $ = id => document.getElementById(id);
+
+/* time */
+function updTime(){
+  const d=new Date();
+  $("headerTime").textContent = d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"}) + " • " + d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+updTime(); setInterval(updTime,10000);
+
+/* helpers */
+function toNum(s){ return Number(String(s).replace(/[^0-9]/g,"")) || 0; }
+function fmt(n){ return "Rp " + Number(n||0).toLocaleString("id-ID"); }
+function setVal(el, num){ el.value = fmt(num); el.dataset.val = String(Number(num||0)); }
+function setRaw(el, num){ el.value = String(num); el.dataset.val = String(Number(num||0)); }
+
+/* compute tomorrow for range endpoints */
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+function tomorrowStr(){
+  const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10);
+}
+
+function formatTanggal(t){
+  // input: "2025-11-30"
+  const d = new Date(t + "T00:00:00");
+  if (isNaN(d)) return t;
+
+  const hariID = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  const bulanID = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agt","Sep","Okt","Nov","Des"];
+
+  const hari = hariID[d.getDay()];
+  const tanggal = String(d.getDate()).padStart(2,"0");
+  const bulan = bulanID[d.getMonth()];
+  const tahun = d.getFullYear();
+
+  return `${hari}, ${tanggal} ${bulan} ${tahun}`;
+}
+
+
+/* LOAD LIST (cards) */
+async function loadList(){
+  const root = $("listRoot");
+  root.innerHTML = '<div class="loading">Memuat...</div>';
+
+  try{
+    const r = await fetch(`https://msg.wendyrenzya.workers.dev/api/laporan_harian/list`);
+    const j = await r.json();
+
+    root.innerHTML = "";
+
+    if(!j.items || j.items.length === 0){
+      root.innerHTML = '<div class="loading">Belum ada laporan</div>';
+      return;
+    }
+
+    j.items.forEach(d => {
+      const card = document.createElement("div");
+      card.className = "card";
+     card.innerHTML = `
+  <div class="card-title">${formatTanggal(d.tanggal)}</div>
+
+  <div class="row"><div>Penjualan Total</div>
+    <div class="row-strong">${fmt(Number(d.penjualan_cash) + Number(d.penjualan_transfer))}</div>
+  </div>
+
+  <div class="row"><div>Cash</div>
+    <div>${fmt(d.penjualan_cash)}</div>
+  </div>
+
+  <div class="row"><div>Transfer</div>
+    <div>${fmt(d.penjualan_transfer)}</div>
+  </div>
+
+  <div class="row"><div>Pengeluaran</div>
+    <div>${fmt(d.pengeluaran)}</div>
+  </div>
+
+  <div class="row"><div>Uang Angin</div>
+    <div>${fmt(d.uang_angin)}</div>
+  </div>
+
+  <div class="row"><div>Charge Servis</div>
+    <div>${fmt(d.charge_servis)}</div>
+  </div>
+
+  <div class="row" style="margin-top:8px">
+    <div>Total Setoran</div>
+    <div class="row-strong">${
+      fmt(
+        Number(d.penjualan_cash)
+        + Number(d.uang_angin)
+        + Number(d.charge_servis)
+        - Number(d.pengeluaran)
+      )
+    }</div>
+  </div>
+`;
+      root.appendChild(card);
+    });
+
+  }catch(err){
+    root.innerHTML = '<div class="loading">Gagal memuat data</div>';
+    console.error(err);
+  }
+}
+
+/* POPUP logic */
+function openPopup(){
+  $("popupBg").style.display = "flex";
+  loadFormData();
+}
+function closePopup(){
+  $("popupBg").style.display = "none";
+}
+
+/* attach formatting listeners to inputs that accept numbers */
+function attachMoneyInput(id){
+  const el = $(id);
+  let composing = false;
+  el.addEventListener("compositionstart",()=>composing=true);
+  el.addEventListener("compositionend", (e)=>{ composing=false; onMoneyInput(e); });
+  el.addEventListener("input", (e)=>{ if(!composing) onMoneyInput(e); });
+  function onMoneyInput(e){
+    const target = e.target;
+    const n = toNum(target.value);
+    target.value = fmt(n);
+    target.dataset.val = String(n);
+    recalcCash();
+  }
+}
+
+/* setup inputs */
+attachMoneyInput("penjualanTransfer");
+attachMoneyInput("uangAngin");
+attachMoneyInput("chargeServis");
+
+async function loadFormData(){
+  // reset field input manual
+  setVal($("penjualanTransfer"), 0);
+  setVal($("uangAngin"), 0);
+  setVal($("chargeServis"), 0);
+
+  try{
+    const today    = todayStr();
+    const tomorrow = tomorrowStr();
+
+    // AMBIL DATA PENJUALAN HARIAN → MENGIKUTI laporan.html
+    const r = await fetch(`${API_LAPORAN}/api/laporan/harian?start=${today}&end=${tomorrow}`);
+    const j = await r.json();
+
+    const arr = j.items || [];
+    const row = arr[0] || {};
+
+    const totalPenjualan = Number(row.penjualan || 0);
+    const pengeluaran    = Number(row.pengeluaran || 0);
+
+    // TAMPILKAN LANGSUNG DI INPUTBOX
+    setVal($("penjualanTotal"), totalPenjualan);
+    setVal($("penjualanCash"), totalPenjualan); // cash awal mengikuti total
+    setVal($("pengeluaran"), pengeluaran);
+
+    // Transfer default 0, nanti bisa diubah user
+    $("penjualanTransfer").dataset.val = "0";
+
+    recalcCash();
+  }
+  catch(err){
+    console.error(err);
+  }
+}
+
+/* recalc penjualan cash when transfer changed */
+function recalcCash(){
+  const total = Number($("penjualanTotal").dataset.val || 0);
+  const transfer = Number($("penjualanTransfer").dataset.val || 0);
+  const cash = total - transfer;
+  setVal($("penjualanCash"), cash);
+}
+
+/* SAVE */
+async function save(){
+  const start = todayStr();
+  const end   = tomorrowStr();
+
+  const tanggal = start;
+  const penjualan_cash = Number($("penjualanCash").dataset.val || 0);
+  const penjualan_transfer = Number($("penjualanTransfer").dataset.val || 0);
+  const pengeluaran = Number($("pengeluaran").dataset.val || 0); // pengeluaran from penjualan endpoint
+  const uang_angin = Number($("uangAngin").dataset.val || 0);
+  const charge_servis = Number($("chargeServis").dataset.val || 0);
+
+  // validate presence of required fields (transfer can be 0, angin and servis can be 0)
+  // make sure penjualan_total is present (>=0)
+  const penjualan_total = Number($("penjualanTotal").dataset.val || 0);
+
+  if(penjualan_total < 0) { alert("Penjualan total tidak valid"); return; }
+
+  // post to worker: worker.save expects tanggal, penjualan_cash, penjualan_transfer, pengeluaran, uang_angin, charge_servis
+  try{
+    const res = await fetch(`${API_NEW}/api/laporan/harian`,{
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        tanggal,
+        penjualan_cash,
+        penjualan_transfer,
+        pengeluaran,
+        uang_angin,
+        charge_servis
+      })
+    });
+  const j = await res.json();
+console.log("RESPON SERVER:", j);
+alert("RESPON: " + JSON.stringify(j));
+
+if(!res.ok){
+  console.error(j);
+  alert("Gagal menyimpan laporan");
+  return;
+}
+  }catch(err){
+    console.error(err);
+    alert("Gagal menyimpan laporan (network)");
+    return;
+  }
+
+  closePopup();
+  await loadList();
+}
+
+/* init */
+loadList();
+</script>
+</body>
+</html>

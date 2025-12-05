@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+    body { font-family: Arial; margin:0; padding:16px; background:#f5f5f5; }
+
+    #fab-add {
+      position:fixed;
+      bottom:22px;
+      right:22px;
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      background:#4a8dff;
+      color:white;
+      font-size:32px;
+      border:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow:0 4px 14px rgba(0,0,0,0.25);
+      z-index:20;
+    }
+
+    .popup-bg { 
+      position:fixed;
+      top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      z-index:10;
+    }
+
+    .popup {
+      background:white;
+      padding:22px;
+      border-radius:14px;
+      width:90%;
+      max-width:420px;
+      box-shadow:0 6px 24px rgba(0,0,0,0.25);
+      margin:auto;
+    }
+
+    .popup-error {
+      color:#b00020;
+      margin-bottom:10px;
+      font-weight:bold;
+      display:none;
+    }
+
+    .field { display:flex; flex-direction:column; margin-bottom:14px; }
+    .field label { font-size:14px; margin-bottom:6px; }
+
+    .input-box {
+      border:1px solid #bbb;
+      border-radius:8px;
+      padding:12px;
+      font-size:16px;
+      width:100%;
+      box-sizing:border-box;
+    }
+
+    .prefix-wrap {
+      display:flex; align-items:center; border:1px solid #bbb;
+      border-radius:8px; padding:0 10px; background:white; height:48px;
+      box-sizing:border-box;
+    }
+    .prefix-wrap span { font-weight:bold; margin-right:6px; }
+    .prefix-wrap input {
+      border:none;
+      width:100%;
+      padding:10px 0;
+      outline:none;
+      font-size:16px;
+    }
+
+    .date-clicker {
+      border:1px solid #bbb;
+      border-radius:8px;
+      padding:12px;
+      height:48px;
+      display:flex;
+      align-items:center;
+      font-size:16px;
+      background:white;
+      cursor:pointer;
+      position:relative;
+      box-sizing:border-box;
+    }
+
+    .date-clicker:after {
+      content:"📅";
+      position:absolute;
+      right:12px;
+      top:10px;
+      font-size:18px;
+      opacity:0.6;
+    }
+
+    .hidden-date {
+      position:absolute;
+      opacity:0;
+      pointer-events:none;
+    }
+
+    .card {
+      background:white;
+      padding:0;
+      border-radius:12px;
+      margin-top:14px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.15);
+      overflow:hidden;
+    }
+
+    .card-header {
+      padding:12px 16px;
+      font-size:16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      color:white;
+    }
+
+    .card-header.unpaid { background:#ff7070; }
+    .card-header.paid { background:#bfc3c8; color:#333; }
+
+    .card-body { padding:16px; display:flex; flex-direction:column; gap:12px; }
+    .row-flex { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+
+    .label { font-size:14px; color:#555; }
+    .value { font-size:16px; font-weight:bold; }
+
+    .status-box {
+      padding:8px 14px;
+      border-radius:8px;
+      font-weight:bold;
+      cursor:pointer;
+      white-space:nowrap;
+      box-shadow:0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .status-unpaid { background:#ffe1e1; color:#8a0000; }
+    .status-paid   { background:#d6e6ff; color:#004b9a; cursor:default; }
+
+    .card-footer {
+      background:#f7f7f7;
+      padding:10px 16px;
+      font-size:14px;
+      font-style:italic;
+      text-align:right;
+    }
+
+    .btn-save {
+      background:#4a8dff;
+      color:white;
+      border:none;
+      padding:10px 18px;
+      border-radius:8px;
+      box-shadow:0 3px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn-close {
+      background:#ff7070;
+      color:white;
+      border:none;
+      padding:10px 18px;
+      border-radius:8px;
+      box-shadow:0 3px 8px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Invoice</h2>
+
+  <button id="fab-add">+</button>
+
+  <div id="list"></div>
+
+  <!-- POPUP -->
+  <div id="popup-bg" class="popup-bg">
+    <div class="popup">
+      <h3 style="margin-bottom:18px;">Input Invoice</h3>
+
+      <div id="popup-error" class="popup-error"></div>
+
+      <div class="field">
+        <label>Tanggal Invoice</label>
+        <div id="tgl_invoice_click" class="date-clicker"></div>
+        <input type="date" id="tanggal_invoice" class="hidden-date">
+      </div>
+
+      <div class="field">
+        <label>Nilai Invoice</label>
+        <div class="prefix-wrap">
+          <span>Rp</span>
+          <input 
+            type="text" 
+            id="nilai_invoice" 
+            placeholder="0"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Keterangan</label>
+        <textarea id="keterangan" class="input-box" placeholder="Keterangan"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Tanggal Jatuh Tempo</label>
+        <div id="tgl_tempo_click" class="date-clicker"></div>
+        <input type="date" id="tanggal_jatuh_tempo" class="hidden-date">
+      </div>
+
+      <button class="btn-save" id="btn-save">Simpan</button>
+      <button class="btn-close" id="btn-close" style="margin-left:6px;">Tutup</button>
+    </div>
+  </div>
+
+<script>
+  const API = "https://msg.wendyrenzya.workers.dev/api";
+
+  const popupBg = document.getElementById("popup-bg");
+  const popupError = document.getElementById("popup-error");
+
+  const tglInvHidden = document.getElementById("tanggal_invoice");
+  const tglInvClick  = document.getElementById("tgl_invoice_click");
+
+  const tglTempoHidden = document.getElementById("tanggal_jatuh_tempo");
+  const tglTempoClick  = document.getElementById("tgl_tempo_click");
+
+  const list = document.getElementById("list");
+
+  popupBg.style.display = "none";
+
+  document.getElementById("fab-add").onclick = () => popupBg.style.display = "flex";
+  document.getElementById("btn-close").onclick = () => popupBg.style.display = "none";
+
+  const monthShort = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+
+  function formatTanggalDisplay(ymd){
+    if(!ymd) return "";
+    const [y,m,d] = ymd.split("-");
+    return `${d} ${monthShort[Number(m)-1]} ${y.slice(2)}`;
+  }
+
+  function addOneMonth(ymd) {
+    const [y,m,d] = ymd.split("-");
+    let newM = Number(m) + 1;
+    let newY = Number(y);
+    if(newM > 12){ newM = 1; newY++; }
+    return `${newY}-${String(newM).padStart(2,"0")}-${d}`;
+  }
+
+  function setDefaults(){
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth()+1).padStart(2,"0");
+    const dd = String(now.getDate()).padStart(2,"0");
+
+    const today = `${yyyy}-${mm}-${dd}`;
+
+    tglInvHidden.value = today;
+    tglInvClick.textContent = formatTanggalDisplay(today);
+
+    const nextMonth = addOneMonth(today);
+    tglTempoHidden.value = nextMonth;
+    tglTempoClick.textContent = formatTanggalDisplay(nextMonth);
+  }
+
+  setDefaults();
+
+  tglInvClick.onclick = () => tglInvHidden.showPicker();
+  tglInvHidden.onchange = () => {
+    const newDate = tglInvHidden.value;
+    tglInvClick.textContent = formatTanggalDisplay(newDate);
+
+    const newTempo = addOneMonth(newDate);
+    tglTempoHidden.value = newTempo;
+    tglTempoClick.textContent = formatTanggalDisplay(newTempo);
+  };
+
+  tglTempoClick.onclick = () => tglTempoHidden.showPicker();
+  tglTempoHidden.onchange = () =>
+    tglTempoClick.textContent = formatTanggalDisplay(tglTempoHidden.value);
+
+  function formatRupiahInput(v){
+    v = v.replace(/[^0-9]/g,"");
+    return v.replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  }
+
+  document.getElementById("nilai_invoice").addEventListener("input", e=>{
+    e.target.value = formatRupiahInput(e.target.value);
+  });
+
+  function parseRupiah(s){ return Number((s||"").replace(/\./g,"")) || 0; }
+
+  document.getElementById("btn-save").onclick = saveInvoice;
+
+  async function saveInvoice(){
+    popupError.style.display = "none";
+
+    const tanggal = tglInvHidden.value;
+    const nilai = parseRupiah(document.getElementById("nilai_invoice").value);
+    const ket = document.getElementById("keterangan").value;
+    const tempo = tglTempoHidden.value;
+
+    if(!tanggal || !nilai || !ket || !tempo){
+      popupError.textContent = "Semua field wajib diisi.";
+      popupError.style.display = "block";
+      return;
+    }
+
+    const body = {
+      tanggal_invoice: tanggal,
+      nilai_invoice: nilai,
+      keterangan: ket,
+      tanggal_jatuh_tempo: tempo
+    };
+
+    try{
+      await axios.post(`${API}/invoice/create`, body);
+      popupBg.style.display = "none";
+      loadList();
+    }catch(e){
+      popupError.textContent = e.response?.data?.error || e.message;
+      popupError.style.display = "block";
+    }
+  }
+
+  async function loadList(){
+    try{
+      const r = await axios.get(`${API}/invoice/list`);
+      renderList(r.data.items || []);
+    }catch(e){
+      list.innerHTML = "Gagal mengambil data.";
+    }
+  }
+
+  function renderList(items){
+    list.innerHTML = "";
+
+    if(!items.length){
+      list.innerHTML = `<div style="margin-top:14px;">Tidak ada invoice.</div>`;
+      return;
+    }
+
+    items.forEach(inv=>{
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const header = document.createElement("div");
+      header.className = "card-header " + (inv.status === "unpaid" ? "unpaid" : "paid");
+      header.innerHTML = `
+        <span>Jatuh Tempo: ${formatTanggalDisplay(inv.tanggal_jatuh_tempo)}</span>
+        <span>Rp ${Number(inv.nilai_invoice).toLocaleString("id-ID")}</span>
+      `;
+      card.appendChild(header);
+
+      const body = document.createElement("div");
+      body.className = "card-body";
+
+      const row = document.createElement("div");
+      row.className = "row-flex";
+
+      row.innerHTML = `
+        <div>
+          <span class="label">Keterangan</span><br>
+          <span class="value">${inv.keterangan}</span>
+        </div>
+      `;
+
+      const statusBtn = document.createElement("div");
+      if(inv.status === "unpaid"){
+        statusBtn.className = "status-box status-unpaid";
+        statusBtn.textContent = "UNPAID";
+        statusBtn.onclick = async ()=>{
+          try{
+            await axios.post(`${API}/invoice/update-status/${inv.id}`);
+            loadList();
+          }catch(_){}
+        };
+      } else {
+        statusBtn.className = "status-box status-paid";
+        statusBtn.textContent = "PAID";
+      }
+
+      row.appendChild(statusBtn);
+      body.appendChild(row);
+      card.appendChild(body);
+
+      const footer = document.createElement("div");
+      footer.className = "card-footer";
+      footer.textContent = "Tanggal Invoice (dibuat): " + formatTanggalDisplay(inv.tanggal_invoice);
+
+      card.appendChild(footer);
+
+      list.appendChild(card);
+    });
+  }
+
+  loadList();
+</script>
+
+</body>
+</html>

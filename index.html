@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <link rel="manifest" href="manifest.json">
-
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
-}
-</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
@@ -22,10 +15,9 @@ if ('serviceWorker' in navigator) {
     display:flex;
     justify-content:center;
     align-items:center;
-
-    height:100dvh;    /* FIX */
-    padding:0;        /* FIX */
-    overflow:hidden;  /* FIX */
+    height:100dvh;
+    padding:0;
+    overflow:hidden;
   }
 
   .login-box{
@@ -130,6 +122,28 @@ if ('serviceWorker' in navigator) {
   .shake{
     animation:shake .36s ease;
   }
+
+  /* APK DOWNLOAD */
+  .apk-download{
+    margin-top:26px;
+    text-align:center;
+  }
+
+  .apk-download img{
+    width:80px;
+    height:80px;
+    display:block;
+    margin:0 auto 6px;
+  }
+
+  .apk-download span{
+    display:block;
+    font-size:14px;
+    font-weight:600;
+    color:#444;
+    margin-top:4px;
+    text-transform:uppercase;
+  }
 </style>
 </head>
 
@@ -158,6 +172,14 @@ if ('serviceWorker' in navigator) {
   <button id="loginBtn" class="btn-login" onclick="doLogin()">Login</button>
 
   <div class="error-text" id="errorBox">Username atau password salah</div>
+
+  <!-- DOWNLOAD APK -->
+  <div class="apk-download">
+    <a href="bigmotor.apk" download>
+      <img src="assets/icon-512.png">
+      <span>download apk</span>
+    </a>
+  </div>
 
 </div>
 

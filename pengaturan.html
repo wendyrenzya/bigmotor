@@ -12,7 +12,7 @@
   --muted:#6b7280;
 }
 
-/* RESET */
+/* BODY */
 body{
   margin:0;
   padding-bottom:90px;
@@ -22,11 +22,8 @@ body{
 }
 *{-webkit-tap-highlight-color:transparent}
 
-/* ========== HEADER (SAMA PERSIS PENJUALAN) ========== */
-.header-wrap{
-  position:relative;
-}
-
+/* HEADER kembali seperti semula, hanya warna teks yang diganti */
+.header-wrap{position:relative;}
 .header{
   background:linear-gradient(90deg,#e8f0ff,#f3f7ff);
   padding:14px 16px;
@@ -35,25 +32,22 @@ body{
   margin-bottom:16px;
   padding-right:90px;
 }
-
 .h-title{
   font-size:18px;
   font-weight:800;
+  color:#0A2A6B;
 }
-
 .h-sub{
   font-size:14px;
   font-weight:600;
-  color:#666;
+  color:#0A2A6B;
   margin-top:2px;
 }
-
 .h-time{
   font-size:13px;
-  color:#666;
+  color:#0A2A6B;
   margin-top:6px;
 }
-
 .header-icon{
   position:absolute;
   right:14px;
@@ -63,7 +57,7 @@ body{
   height:auto;
 }
 
-/* ========== GRID MENU BARU ========== */
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -71,7 +65,6 @@ body{
   padding:0 16px;
   margin-top:20px;
 }
-
 .menu-item{
   background:var(--card);
   border-radius:18px;
@@ -81,29 +74,18 @@ body{
   cursor:pointer;
   transition:transform .15s;
 }
-
 .menu-item img{
-  width:72px;
-  height:72px;
-  object-fit:contain;
+  width:72px;height:72px;object-fit:contain;
 }
-
 .menu-item span{
-  display:block;
-  margin-top:10px;
-  font-size:14px;
-  font-weight:600;
-  color:#111;
+  display:block;margin-top:10px;
+  font-size:14px;font-weight:600;color:#111;
 }
+.menu-item:active{transform:scale(.98);}
 
-.menu-item:active{
-  transform:scale(.98);
-}
-
-/* ========== NAVBAR ========== */
+/* NAVBAR */
 .navbar{
-  position:fixed;
-  bottom:0;left:0;right:0;
+  position:fixed;bottom:0;left:0;right:0;
   background:#fff;
   display:flex;
   justify-content:space-around;
@@ -112,51 +94,41 @@ body{
   box-shadow:0 -3px 10px rgba(0,0,0,0.06);
   z-index:999;
 }
-
 .nav-item{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  font-size:11px;
-  font-weight:600;
-  padding:6px 12px;
-  border-radius:16px;
-  cursor:pointer;
-  color:#6a6a6a;
-  transition:.15s;
+  display:flex;flex-direction:column;align-items:center;
+  font-size:11px;font-weight:600;
+  padding:6px 12px;border-radius:16px;
+  cursor:pointer;color:#6a6a6a;transition:.15s;
 }
-
 .nav-item img{
-  width:28px;height:28px;margin-bottom:4px;
-  opacity:.65;
+  width:28px;height:28px;margin-bottom:4px;opacity:.65;
 }
+.nav-active{background:rgba(62,139,255,0.12);color:#3E8BFF!important;}
+.nav-active img{opacity:1!important;}
 
-.nav-active{
-  background:rgba(62,139,255,0.12);
-  color:#3E8BFF!important;
-}
-
-.nav-active img{
-  opacity:1!important;
-}
-
-/* bounce */
 .bounce{animation:bounceTap .25s ease-out}
-@keyframes bounceTap{
-  0%{transform:scale(1)}
-  40%{transform:scale(.92)}
-  100%{transform:scale(1)}
-}
+@keyframes bounceTap{0%{transform:scale(1)}40%{transform:scale(.92)}100%{transform:scale(1)}}
 
 /* POPUP QR */
 #qrPopup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.45);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;justify-content:center;align-items:center;z-index:9999;
+}
+
+/* FOOTER — biru muda, italic, domain bold italic */
+.footer-note{
+  margin-top:40px;
+  text-align:center;
+  font-size:12px;
+  padding-bottom:60px;
+  color:#0A2A6B;
+  background:#bcd4ff;
+  padding:14px 0;
+  font-style:italic;
+}
+.footer-note b{
+  font-weight:700;
+  font-style:italic;
 }
 </style>
 </head>
@@ -167,28 +139,19 @@ body{
 const token = localStorage.getItem("token");
 if(!token) location.href="index.html";
 
-/* bounce + navigate */
 function bounceThenNavigate(el,url){
-  if(el){
-    el.classList.add("bounce");
-    setTimeout(()=>el.classList.remove("bounce"),280);
-  }
+  if(el){el.classList.add("bounce");setTimeout(()=>el.classList.remove("bounce"),280);}
   setTimeout(()=>location.href=url,90);
 }
 
-/* logout */
 function doLogout(el){
-  if(el){
-    el.classList.add("bounce");
-    setTimeout(()=>el.classList.remove("bounce"),280);
-  }
+  if(el){el.classList.add("bounce");setTimeout(()=>el.classList.remove("bounce"),280);}
   setTimeout(()=>{
     localStorage.clear();
     location.href="index.html";
   },90);
 }
 
-/* time updater */
 function updateHeaderTime(){
   const d=new Date();
   document.getElementById("headerTime").textContent =
@@ -199,7 +162,6 @@ function updateHeaderTime(){
 setInterval(updateHeaderTime,10000);
 setTimeout(updateHeaderTime,10);
 
-/* show QR */
 function showQR(){
   const p=document.getElementById("qrPopup");
   p.style.display="flex";
@@ -207,40 +169,64 @@ function showQR(){
 }
 </script>
 
-<!-- HEADER BARU -->
+<!-- HEADER -->
 <div class="header-wrap">
   <div class="header">
     <div class="h-title">BIG Motor Tingkulu</div>
-    <div class="h-sub">Pengaturan Sistem</div>
+    <div class="h-sub">Fitur & Pengaturan Lain</div>
     <div id="headerTime" class="h-time"></div>
-
     <img src="assets/atur.png" class="header-icon">
   </div>
 </div>
 
-<!-- GRID MENU BARU -->
+<!-- GRID ATAS -->
 <div class="grid">
 
-  <div class="menu-item" onclick="bounceThenNavigate(this,'absen.html')">
-    <img src="assets/absen.png"><span>Absensi</span>
-  </div>
-
-  <div class="menu-item" onclick="bounceThenNavigate(this,'user.html')">
-    <img src="assets/user.png"><span>User</span>
-  </div>
-
+  <!-- Katalog -->
   <div class="menu-item" onclick="bounceThenNavigate(this,'list_katalog.html')">
     <img src="assets/katalog.png"><span>Katalog</span>
   </div>
 
+  <!-- Absensi -->
+  <div class="menu-item" onclick="bounceThenNavigate(this,'absen.html')">
+    <img src="assets/absen.png"><span>Absensi</span>
+  </div>
+
+  <!-- Akun -->
+  <div class="menu-item" onclick="bounceThenNavigate(this,'user.html')">
+    <img src="assets/user.png"><span>Akun</span>
+  </div>
+
+  <!-- GRID TENGAH -->
+
+  <!-- Invoice -->
+  <div class="menu-item" onclick="bounceThenNavigate(this,'invoice.html')">
+    <img src="assets/invoice.png"><span>Invoice</span>
+  </div>
+
+  <!-- Harga ⇅ -->
+  <div class="menu-item" onclick="bounceThenNavigate(this,'harga.html')">
+    <img src="assets/harga2.png"><span>Harga ⇅</span>
+  </div>
+
+  <!-- Bonus -->
   <div class="menu-item" onclick="bounceThenNavigate(this,'bonus.html')">
     <img src="assets/bonus.png"><span>Bonus</span>
   </div>
 
+  <!-- GRID BAWAH -->
+
+  <!-- Daily -->
+  <div class="menu-item" onclick="bounceThenNavigate(this,'laporan_harian.html')">
+    <img src="assets/daily.png"><span>Daily</span>
+  </div>
+
+  <!-- QR Code -->
   <div class="menu-item" onclick="showQR()">
     <img src="assets/qrcode.png"><span>QR Code</span>
   </div>
 
+  <!-- Logout -->
   <div class="menu-item" onclick="doLogout(this)">
     <img src="assets/logout.png"><span>Logout</span>
   </div>
@@ -252,6 +238,12 @@ function showQR(){
   <div style="background:#fff;padding:16px;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.2)">
     <img src="assets/QR.jpg" style="width:260px;height:auto;border-radius:12px">
   </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer-note">
+  Copyright ©2025 <b>bigmotor.web.id</b><br>
+  web apps for bengkel BIG Motor
 </div>
 
 <!-- NAVBAR -->
@@ -266,7 +258,7 @@ function showQR(){
     <img src="assets/riwayat.png">Riwayat
   </div>
   <div class="nav-item nav-active">
-    <img src="assets/pengaturan.png">Pengaturan
+    <img src="assets/pengaturan.png">Fitur
   </div>
 </div>
 
