@@ -516,13 +516,13 @@ function render(items){
   let q=searchInput.value;
 
   items.forEach(it=>{
-    let img= (it.foto&&it.foto!=="null")?it.foto:"assets/no_image.png";
+    let img= (it.foto&&it.foto!=="null")?it.foto:"assets/noimg.png";
     let d=document.createElement("div");
     d.className="item";
     d.id=`item-${it.id}`;
     d.onclick=()=>{d.classList.add('bounce');setTimeout(()=>location.href=`barang_detail.html?id=${it.id}`,180);}
     d.innerHTML=`
-      <img class="item-img" src="${esc(img)}">
+      <img loading="lazy" class="item-img" src="${esc(img)}" onerror="this.onerror=null;this.src='assets/noimg.png'">
       <div class="item-info">
         <div class="item-name">${highlight(it.nama,q)}</div>
         <div class="item-meta">${highlight(it.kategori||"-",q)} • Rp ${Number(it.harga).toLocaleString("id-ID")}</div>
@@ -530,8 +530,9 @@ function render(items){
       </div>
     `;
     root.appendChild(d);
-  });
-}
+    });
+    }
+  
 
 /* AUTO-SCROLL & HIGHLIGHT */
 function handleNewItemScroll(){
@@ -596,5 +597,6 @@ fab.onclick=()=>{
   }
 })();
 </script>
+<script src="/img-cache.js"></script>
 </body>
 </html>

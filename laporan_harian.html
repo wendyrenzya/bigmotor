@@ -99,6 +99,10 @@ label{display:block;font-size:13px;color:#333;margin-bottom:6px;font-weight:600}
 
 <script>
 const API = "https://api.bigmotor.biz.id";
+const API_NEW = "https://msg.wendyrenzya.workers.dev";
+// API baru untuk meniru cara laporan.html mengambil penjualan harian
+const API_LAPORAN = "https://api.bigmotor.biz.id";
+
 const $ = id => document.getElementById(id);
 
 /* time */
@@ -236,46 +240,38 @@ attachMoneyInput("penjualanTransfer");
 attachMoneyInput("uangAngin");
 attachMoneyInput("chargeServis");
 
-/* load form: penjualan total & pengeluaran must come from penjualan endpoint range */
 async function loadFormData(){
-  // reset fields
-  setVal($("penjualanTotal"), 0);
-  setVal($("penjualanCash"), 0);
+  // reset field input manual
   setVal($("penjualanTransfer"), 0);
-  setVal($("pengeluaran"), 0);
   setVal($("uangAngin"), 0);
   setVal($("chargeServis"), 0);
 
   try{
-    const start = todayStr();
-    const end   = tomorrowStr(); // worker expects end = tomorrow
-    const r = await fetch(`https://msg.wendyrenzya.workers.dev/api/laporan_harian/list`);
+    const today    = todayStr();
+    const tomorrow = tomorrowStr();
+
+    // AMBIL DATA PENJUALAN HARIAN → MENGIKUTI laporan.html
+    const r = await fetch(`${API_LAPORAN}/api/laporan/harian?start=${today}&end=${tomorrow}`);
     const j = await r.json();
 
-    // j is expected array; take first element if exists
-    const row = Array.isArray(j) ? (j[0]||{}) : (j || {});
-    const penjualan = Number(row.penjualan || 0);
-    const pengeluaran = Number(row.pengeluaran || 0);
+    const arr = j.items || [];
+    const row = arr[0] || {};
 
-    setVal($("penjualanTotal"), penjualan);
-    // penjualan cash initial is penjualan (cash stored) or computed after transfer input, but show initial value if backend gives penjualan_cash in summary
-    // prefer to compute cash as penjualan - transfer (transfer initially 0)
-    setVal($("penjualanCash"), penjualan);
+    const totalPenjualan = Number(row.penjualan || 0);
+    const pengeluaran    = Number(row.pengeluaran || 0);
 
+    // TAMPILKAN LANGSUNG DI INPUTBOX
+    setVal($("penjualanTotal"), totalPenjualan);
+    setVal($("penjualanCash"), totalPenjualan); // cash awal mengikuti total
     setVal($("pengeluaran"), pengeluaran);
 
-    // ensure dataset val for transfer/angin/servis exist
+    // Transfer default 0, nanti bisa diubah user
     $("penjualanTransfer").dataset.val = "0";
-    $("uangAngin").dataset.val = "0";
-    $("chargeServis").dataset.val = "0";
 
     recalcCash();
-  }catch(err){
+  }
+  catch(err){
     console.error(err);
-    // keep zeros but show notice
-    setVal($("penjualanTotal"), 0);
-    setVal($("penjualanCash"), 0);
-    setVal($("pengeluaran"), 0);
   }
 }
 
@@ -307,24 +303,30 @@ async function save(){
 
   // post to worker: worker.save expects tanggal, penjualan_cash, penjualan_transfer, pengeluaran, uang_angin, charge_servis
   try{
-    const res = await fetch(`${API}/api/laporan/harian`,{
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        tanggal,
-        penjualan_cash,
-        penjualan_transfer,
-        pengeluaran,
-        uang_angin,
-        charge_servis
-      })
-    });
-    const j = await res.json();
-    if(!res.ok && !j.ok){
-      console.error(j);
-      alert("Gagal menyimpan laporan");
-      return;
-    }
+    const now = new Date().toISOString();
+
+const res = await fetch(`${API_NEW}/api/laporan/harian`,{
+  method: "POST",
+  headers: {"Content-Type":"application/json"},
+  body: JSON.stringify({
+    tanggal,
+    penjualan_cash,
+    penjualan_transfer,
+    pengeluaran,
+    uang_angin,
+    charge_servis,
+    created_at: now
+  })
+});
+  const j = await res.json();
+console.log("RESPON SERVER:", j);
+alert("Berhasil disimpan");
+
+if(!res.ok){
+  console.error(j);
+  alert("Gagal menyimpan laporan");
+  return;
+}
   }catch(err){
     console.error(err);
     alert("Gagal menyimpan laporan (network)");

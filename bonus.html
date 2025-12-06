@@ -319,31 +319,37 @@ function closeModal(){
 
 /* SAVE AKUMULASI */
 async function saveAkumulasi(){
-  const raw=document.getElementById("inp-nilai").value.replace(/\D+/g,"");
-  const val=Number(raw||0);
-  if(val<=0)return;
+  const raw = document.getElementById("inp-nilai").value.replace(/\D+/g, "");
+  const add = Number(raw || 0);
+  if(add <= 0) return;
 
-  const cur=await loadProgress(activeUser);
-  const target=targetMap[activeUser];
+  // progress & target diambil langsung dari tampilan layar
+  const card = document.querySelector(`.card[data-user='${activeUser}']`);
+  const cur = Number(card.getAttribute("data-progress") || 0);
+  const target = Number(card.getAttribute("data-target") || 0);
 
-  let next=cur+val;
+  const next = cur + add;
 
-  if(next>=target){
-    await apiPOST(`${BASE}/api/bonus/achieved`,{
-      username:activeUser,
-      tanggal:new Date().toISOString().slice(0,10),
-      nilai:50000,
-      status:"belum"
+  // Jika sudah mencapai target
+  if(next >= target){
+    await apiPOST(`${BASE}/api/bonus/achieved`, {
+      username: activeUser,
+      tanggal: new Date().toISOString().slice(0,10),
+      nilai: 50000,
+      status: "belum"
     });
-    next=0;
-  }
 
-  await saveProgress(activeUser,next);
+    // Setelah bonus tercapai progress menjadi 0 lagi
+    await saveProgress(activeUser, 0);
+  } 
+  else {
+    // Jika belum target, simpan progress baru
+    await saveProgress(activeUser, next);
+  }
 
   closeModal();
   renderCards();
 }
-
 /* MARK PAID */
 async function markPaid(id){
   await apiPOST(`${BASE}/api/bonus/status`,{id,status:"paid"});
@@ -377,6 +383,9 @@ async function renderCards(){
 
     const card=document.createElement("div");
     card.className="card";
+    card.setAttribute("data-user", p.id);
+card.setAttribute("data-progress", val);
+card.setAttribute("data-target", target);
     card.style.border=`2px solid ${color}`;
     card.style.boxShadow=`0 2px 8px ${color}40`;
 
