@@ -121,7 +121,7 @@ body{
   border-radius:999px;
   background:rgba(255,255,255,0.5);
   backdrop-filter:blur(4px);
-  border:2px solid #3E8BFF;
+  border:none;
   display:flex;
   justify-content:center;
   align-items:center;
@@ -153,9 +153,8 @@ body{
   <div id="end" class="hint" style="display:none">Tidak ada lagi data</div>
 </div>
 
-<!-- FAB HOME -->
-<div class="fab-home" onclick="location.href='home.html'">
-  <img src="assets/beranda.png">
+<div class="fab-home" onclick="history.back()">
+  <img src="assets/back_white.png">
 </div>
 
 <script>
