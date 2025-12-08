@@ -6,6 +6,27 @@
 <title>Laporan Harian • BigMotor</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+    /* FAB BACK LEFT BOTTOM */
+.fab-back{
+  position:fixed;
+  left:18px;
+  bottom:18px;
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  background:#ffffff;
+  box-shadow:0 4px 18px rgba(0,0,0,0.22);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
+  z-index:999;
+}
+.fab-back img{
+  width:32px;
+  height:32px;
+  object-fit:contain;
+}
 :root{
   --bg:#f4f5f7;
   --card:#fff;
@@ -339,6 +360,13 @@ if(!res.ok){
 
 /* init */
 loadList();
+</script>
+<div class="fab-back" id="fabBack">
+  <img src="assets/back_white.png">
+</div>
+
+<script>
+  document.getElementById("fabBack").onclick = () => history.back();
 </script>
 </body>
 </html>
