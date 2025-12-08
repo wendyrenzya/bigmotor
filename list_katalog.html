@@ -294,9 +294,12 @@ async function saveRename(){
 }
 
 /* Copy URL */
-function copyURL(id,ev){
+function copyURL(id, ev){
   ev.stopPropagation();
-  const fullURL = location.origin + "/katalog.html?id_katalog=" + id;
+
+  const base = "https://bigmotor.web.id";
+  const fullURL = base + "/katalog.html?id_katalog=" + id;
+
   navigator.clipboard.writeText(fullURL);
   toast("URL disalin");
 }
