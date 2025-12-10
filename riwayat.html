@@ -738,7 +738,7 @@ $("dlgMeta").innerHTML =
         }
       }
 
-      $("btnLihatStruk").style.display=barangAsli.length>0?"inline-block":"none";
+      $("btnLihatStruk").style.display = "inline-block";
       $("overlayDetail").style.display="flex";
       return;
     }
@@ -814,7 +814,14 @@ if(j.audit){
       box.appendChild(div);
     }
 
-    $("btnLihatStruk").style.display=j.keluar?.length>0?"inline-block":"none";
+ // aturan: hanya PJL dan SRV yang boleh lihat struk
+const TID = String(tid).toUpperCase();
+
+if (TID.startsWith("PJL-") || TID.startsWith("SRV-")) {
+    $("btnLihatStruk").style.display = "inline-block";
+} else {
+    $("btnLihatStruk").style.display = "none";
+}
     $("overlayDetail").style.display="flex";
 
   }catch{
