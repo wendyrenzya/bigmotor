@@ -283,7 +283,9 @@ async function loadFormData(){
     const row = arr[0] || {};
 
     const totalPenjualan = Number(row.penjualan || 0);
-    const pengeluaran    = Number(row.pengeluaran || 0);
+
+// ambil hanya 2 kategori (operasional + lain-lain)
+const pengeluaran = Number(row.pengeluaran_operasional_lain || 0);
 
     // TAMPILKAN LANGSUNG DI INPUTBOX
     setVal($("penjualanTotal"), totalPenjualan);
