@@ -14,6 +14,34 @@ body { margin:0; font-family:Inter,Roboto; background:#fff; }
   gap:16px;
 }
 
+.catatan-row{
+  display:block;
+  padding:8px 0;
+  font-weight:600;
+}
+
+.note-box{
+  width:100%;
+  padding:10px 12px;
+  background:#fafafa;
+  border:1px solid #e6e6e6;
+  border-radius:8px;
+  font-size:14px;
+  color:#444;
+  margin-top:6px;
+  white-space:pre-wrap;       /* dukung enter */
+  text-align:justify;         /* rapi */
+  text-justify:inter-word;
+  max-width:100%;
+  box-sizing:border-box;   /* WAJIB agar padding tidak menambah lebar */
+  overflow-wrap:break-word;
+}
+
+.note-empty{
+  color:#999;
+  font-style:italic;
+}
+
 .stock-box {
   display:flex;
   flex-direction:column;
@@ -75,6 +103,9 @@ body { margin:0; font-family:Inter,Roboto; background:#fff; }
   border-radius:12px;
   border:1px solid #eee;
   margin-top:14px;
+
+  max-width:100%;     /* WAJIB */
+  overflow:hidden;    /* WAJIB */
 }
 
 .row {
@@ -258,8 +289,13 @@ async function loadDetail(){
     <div class="row"><div>Harga</div><div>Rp ${(data.harga || 0).toLocaleString("id-ID")}</div></div>
     <div class="row"><div>Harga Modal</div><div>Rp ${(data.harga_modal || 0).toLocaleString("id-ID")}</div></div>
       <div class="row"><div>Kategori</div><div>${data.kategori || "-"}</div></div>
-<div class="row"><div>Catatan</div><div style="max-width:160px;text-align:right;">${data.catatan || "-"}</div></div>
-  </div>
+<div class="row catatan-row">
+  Catatan
+</div>
+
+${data.deskripsi
+  ? `<div class="note-box">${data.deskripsi}</div>`
+  : `<div class="note-box note-empty">Tidak ada catatan</div>`}
   </div>
 `;
   }

@@ -114,19 +114,17 @@ body{
 /* LIST */
 .list{
   position:fixed;
-  top:136px;
+  top:auto;
   left:0;
   right:0;
   bottom:80px;
   overflow-y:auto;
-  padding-bottom:20px;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* LIST ITEM */
 .item{
   display:flex;
-  gap:12px;
+  gap:12px;  
   align-items:center;
   background:#fff;
   margin:10px 12px;
@@ -143,8 +141,21 @@ body{
   background:#eee;
   object-fit:cover;
 }
-.item-info{flex:1;}
-.item-name{font-size:16px;font-weight:800;}
+.item-info{
+  flex:1;              /* ambil semua ruang sisa */
+  min-width:0;         /* WAJIB agar teks bisa wrap dan tidak memaksa lebar */
+  padding-right:10px;  /* berhenti 10px sebelum stock-box */
+  display:flex;
+  flex-direction:column;
+}
+.item-name{
+  font-size:15px;        /* lebih kecil, muat lebih banyak */
+  font-weight:800;
+  line-height:1.25;      /* lebih rapat */
+  padding-bottom:4px;    /* ruang kecil sebelum garis */
+  margin-bottom:4px;
+  border-bottom:1px solid #e6e6e6;  /* garis tipis */
+}
 .item-meta{font-size:13px;color:var(--muted);margin-top:4px;}
 .item-extra{font-size:12px;color:var(--muted);margin-top:8px;}
 
@@ -163,6 +174,41 @@ body{
   0%{background:var(--soft1);}
   50%{background:var(--soft2);}
   100%{background:white;}
+}
+
+
+.stock-box{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+
+  align-items:flex-end;   /* geser isi ke kanan penuh */
+  text-align:right;       /* tulisan ikut rata kanan */
+
+  margin-left:auto;       /* dorong ke area paling kanan */
+  width:40px;             /* ruang khusus di kanan agar posisi stabil */
+  padding-right:4px;      /* mepet ke tepi */
+}
+
+.stock-label{
+  font-size:11px;
+  color:#888;
+  margin-bottom:2px;
+}
+
+.stock-value{
+  font-size:22px;
+  font-weight:800;
+  color:#0066ff;
+  line-height:1;
+}
+
+.item-cat{
+  font-size:12px;
+  color:#555;
+  margin-top:6px;
+  text-align:justify;
+  text-justify:inter-word;
 }
 
 /* FAB */
@@ -435,6 +481,17 @@ let DATA=[];
 let CAT="ALL";
 let SORT="NAME_ASC"; /* default A-Z */
 
+function fixListTop(){
+  const header = document.querySelector('.header-wrap');
+  const search = document.querySelector('.search-row');
+  const list = document.getElementById('listRoot');
+
+  const h = header.offsetHeight + search.offsetHeight;
+  list.style.top = h + 'px';
+}
+
+window.addEventListener("load", fixListTop);
+window.addEventListener("resize", fixListTop);
 load();
 
 async function load(){
@@ -521,22 +578,31 @@ function render(items){
     d.className="item";
     d.id=`item-${it.id}`;
     d.onclick=()=>{d.classList.add('bounce');setTimeout(()=>location.href=`barang_detail.html?id=${it.id}`,180);}
-    d.innerHTML=`
-      <img loading="lazy" class="item-img" src="${esc(img)}" onerror="this.onerror=null;this.src='assets/noimg.png'">
-      <div class="item-info">
-        <div class="item-name">${highlight(it.nama,q)}</div>
-        <div class="item-meta">${highlight(it.kategori||"-",q)} • Rp ${Number(it.harga).toLocaleString("id-ID")}</div>
-        <div class="item-extra">
-  Kode: ${it.kode_barang||"-"} • 
-  <span style="
-    font-weight:800;
-    color:${(it.stock||0) > 0 ? '#1fa71f' : '#d82828'};
-  ">
-    Stok: ${it.stock||0}
-  </span>
-</div>
-      </div>
-    `;
+    const cat = (it.deskripsi || "").trim(); 
+const catHTML = cat ? `<div class="item-cat">${esc(cat)}</div>` : "";
+
+d.innerHTML = `
+  <img loading="lazy" class="item-img" src="${esc(img)}"
+       onerror="this.onerror=null;this.src='assets/noimg.png'">
+
+  <div class="item-info">
+    <div class="item-name">${highlight(it.nama,q)}</div>
+
+    <div class="item-meta">
+      ${highlight(it.kategori||"-",q)} • 
+      <span style="color:#1fa71f;font-weight:800;">
+        Rp ${Number(it.harga).toLocaleString("id-ID")}
+      </span>
+    </div>
+
+    ${catHTML}
+  </div>
+
+  <div class="stock-box">
+    <div class="stock-label">Stok </div>
+    <div class="stock-value">${it.stock || 0}</div>
+  </div>
+`;
     root.appendChild(d);
     });
     }
