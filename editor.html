@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Editor Final</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Pacifico&family=Caveat:wght@400;600&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#f4f5f7;
+  --border:#ddd;
+  --btnpad:6px;
+  --ctrlpad-vert:4px;
+  --ctrlpad-hor:8px;
+  --gap:4px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:#111}
+
+/* Toolbar compact 2 rows */
+.toolbar{
+  background:#fff;
+  padding:6px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:var(--gap);
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:50;
+}
+.btn{
+  padding:var(--btnpad);
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  min-width:34px;
+}
+.btn:active{transform:scale(.98)}
+.btn.active{background:#e6f0ff;border-color:#5b8aff}
+
+.control{
+  display:flex;align-items:center;gap:8px;
+  padding:var(--ctrlpad-vert) var(--ctrlpad-hor);
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fff;
+  cursor:pointer;
+  min-height:34px;
+}
+
+/* dropdown */
+.dropdown{
+  display:none;
+  position:absolute;
+  top:110%;
+  left:0;
+  min-width:180px;
+  max-height:260px;
+  overflow:auto;
+  background:#fff;border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+  z-index:200;
+}
+.item{padding:8px 12px;cursor:pointer}
+.item:hover{background:#eef4ff}
+
+/* editor */
+#editor{
+  margin:14px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:10px;
+  min-height:340px;
+  padding:14px;
+  outline:none;
+  line-height:1.6;
+  font-size:15px;
+}
+
+/* lists */
+#editor ul{list-style:none;padding-left:26px}
+#editor ul li{position:relative;margin:6px 0}
+#editor ul li::before{content:"";width:7px;height:7px;background:#222;border-radius:50%;position:absolute;left:-18px;top:8px}
+#editor ol{counter-reset:n; padding-left:30px}
+#editor ol li{counter-increment:n;margin:6px 0;position:relative}
+#editor ol li::before{content:counter(n) ".";position:absolute;left:-24px;top:0;font-weight:700}
+
+/* actions */
+.actions{display:flex;gap:10px;padding:12px 14px}
+.btnSave{flex:1;padding:12px;background:#007bff;color:#fff;border:none;border-radius:10px;cursor:pointer}
+.btnCancel{padding:12px;background:#888;color:#fff;border:none;border-radius:10px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+
+  <!-- BASIC -->
+  <div class="btn" data-cmd="bold" title="Bold"><b>B</b></div>
+  <div class="btn" data-cmd="italic" title="Italic"><i>I</i></div>
+  <div class="btn" data-cmd="underline" title="Underline"><u>U</u></div>
+
+  <!-- ALIGN -->
+  <div class="btn" data-cmd="justifyLeft" title="Align left">
+    <svg width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="4" width="12" height="2"/><rect x="3" y="8" width="18" height="2"/><rect x="3" y="12" width="16" height="2"/><rect x="3" y="16" width="18" height="2"/></svg>
+  </div>
+
+  <div class="btn" data-cmd="justifyCenter" title="Align center">
+    <svg width="18" height="18" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="2"/><rect x="3" y="8" width="18" height="2"/><rect x="7" y="12" width="10" height="2"/><rect x="3" y="16" width="18" height="2"/></svg>
+  </div>
+
+  <div class="btn" data-cmd="justifyRight" title="Align right">
+    <svg width="18" height="18" viewBox="0 0 24 24"><rect x="9" y="4" width="12" height="2"/><rect x="3" y="8" width="18" height="2"/><rect x="7" y="12" width="14" height="2"/><rect x="3" y="16" width="18" height="2"/></svg>
+  </div>
+
+  <div class="btn" data-cmd="justifyFull" title="Justify">
+    <svg width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="2"/><rect x="3" y="8" width="18" height="2"/><rect x="3" y="12" width="18" height="2"/><rect x="3" y="16" width="18" height="2"/></svg>
+  </div>
+
+  <!-- UL/OL -->
+  <div class="btn" id="btn-ul" title="Unordered list">
+    <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="5" cy="18" r="2"/><rect x="10" y="5" width="11" height="2"/><rect x="10" y="11" width="11" height="2"/><rect x="10" y="17" width="11" height="2"/></svg>
+  </div>
+
+  <div class="btn" id="btn-ol" title="Ordered list">
+    <svg width="18" height="18" viewBox="0 0 24 24"><text x="4" y="7" font-size="5">1</text><text x="4" y="13" font-size="5">2</text><text x="4" y="19" font-size="5">3</text><rect x="10" y="5" width="11" height="2"/><rect x="10" y="11" width="11" height="2"/><rect x="10" y="17" width="11" height="2"/></svg>
+  </div>
+
+  <div style="flex-basis:100%;height:0"></div>
+
+  <!-- SIZE -->
+  <div class="control openable" data-dd="size" title="Size">
+    <span id="sizeLabel" style="min-width:48px;text-align:center">Size</span>
+    <div>▾</div>
+    <div class="dropdown" id="dd-size">
+      <div class="item" data-size="12" style="font-size:12px">12px</div>
+      <div class="item" data-size="14" style="font-size:14px">14px</div>
+      <div class="item" data-size="16" style="font-size:16px">16px</div>
+      <div class="item" data-size="20" style="font-size:20px">20px</div>
+      <div class="item" data-size="24" style="font-size:24px">24px</div>
+      <div class="item" data-size="28" style="font-size:28px">28px</div>
+    </div>
+  </div>
+
+  <!-- FONT -->
+  <div class="control openable" data-dd="font" title="Font">
+    <span id="fontLabel" style="font-family:Inter;min-width:68px;text-align:center">Inter</span>
+    <div>▾</div>
+    <div class="dropdown" id="dd-font">
+      <div class="item" data-font="Inter" style="font-family:Inter">Inter</div>
+      <div class="item" data-font="Arial" style="font-family:Arial">Arial</div>
+      <div class="item" data-font="Times New Roman" style="font-family:'Times New Roman'">Times New Roman</div>
+      <div class="item" data-font="Courier New" style="font-family:'Courier New'">Courier New</div>
+      <div style="border-top:1px solid #eee;margin:6px 0"></div>
+      <div class="item" data-font="Pacifico" style="font-family:Pacifico">Pacifico</div>
+      <div class="item" data-font="Caveat" style="font-family:Caveat">Caveat</div>
+      <div class="item" data-font="Shadows Into Light" style="font-family:'Shadows Into Light'">Shadows Into Light</div>
+    </div>
+  </div>
+
+  <!-- FONT COLOR -->
+  <div class="control openable" data-dd="color" title="Font color">
+    <span id="colorLabel" style="min-width:48px;text-align:center">Color</span>
+    <div>▾</div>
+    <div class="dropdown" id="dd-color">
+      <div class="item" data-color="#000000" style="color:#000">Hitam</div>
+      <div class="item" data-color="#ff0000" style="color:#f00">Merah</div>
+      <div class="item" data-color="#006eff" style="color:#06f">Biru</div>
+      <div class="item" data-color="#0cb500" style="color:#0b0">Hijau</div>
+      <div class="item" data-color="#ff8800" style="color:#f80">Oranye</div>
+      <div class="item" data-color="#aa00ff" style="color:#a0f">Ungu</div>
+      <div class="item" data-color="#ff00b2" style="color:#f0b">Pink</div>
+    </div>
+  </div>
+
+  <!-- HIGHLIGHT -->
+  <div class="control openable" data-dd="highlight" title="Highlight">
+    <div id="hlPreview" style="width:20px;height:20px;border-radius:4px;border:1px solid #bbb;background:#fff"></div>
+    <div>▾</div>
+    <div class="dropdown" id="dd-highlight">
+      <div class="item" data-hl="none" style="background:#fff">Clear</div>
+      <div class="item" data-hl="#fff34d" style="background:#fff34d">Kuning</div>
+      <div class="item" data-hl="#b6ff6b" style="background:#b6ff6b">Hijau</div>
+      <div class="item" data-hl="#87e3ff" style="background:#87e3ff">Biru</div>
+      <div class="item" data-hl="#ffc46b" style="background:#ffc46b">Oranye</div>
+      <div class="item" data-hl="#ff9ad6" style="background:#ff9ad6">Pink</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="editor" contenteditable="true" spellcheck="true"></div>
+
+<div class="actions">
+  <button class="btnSave" id="saveBtn" type="button">Simpan</button>
+  <button class="btnCancel" id="cancelBtn" type="button">Batal</button>
+</div>
+
+<script>
+/* CONFIG */
+const API = "https://msg.wendyrenzya.workers.dev/api/settings/custom";
+
+/* SELECTION SAVE/RESTORE */
+let savedRange = null;
+function saveSel(){ const s = window.getSelection(); if(s.rangeCount>0) savedRange = s.getRangeAt(0).cloneRange(); }
+function restoreSel(){ if(!savedRange) return; const s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange); }
+function ensureFocus(){ const ed = document.getElementById("editor"); if(document.activeElement !== ed) ed.focus(); }
+
+/* WRAP INLINE */
+function wrapInline(prop, val){
+  restoreSel(); ensureFocus();
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+
+  const span = document.createElement('span');
+  span.style.display = 'inline';
+  span.style[prop] = val;
+
+  if(!sel.isCollapsed){
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+    sel.removeAllRanges();
+    const r2 = document.createRange();
+    r2.selectNodeContents(span);
+    sel.addRange(r2);
+  } else {
+    span.appendChild(document.createTextNode('\u200B'));
+    range.insertNode(span);
+    sel.removeAllRanges();
+    const r2 = document.createRange();
+    r2.setStart(span.firstChild,1);
+    r2.collapse(true);
+    sel.addRange(r2);
+  }
+  saveSel();
+}
+
+/* CLEAR HIGHLIGHT (remove background-color style in selection) */
+function clearHighlightInSelection(){
+  restoreSel(); ensureFocus();
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+
+  // Extract contents, clean inline background/backgroundColor styles, reinsert
+  const frag = range.extractContents();
+  const walker = document.createTreeWalker(frag, NodeFilter.SHOW_ELEMENT, null, false);
+  const elems = [];
+  while(walker.nextNode()) elems.push(walker.currentNode);
+  elems.forEach(el=>{
+    if(el.style){
+      el.style.backgroundColor = '';
+      el.style.background = '';
+      if(el.getAttribute && el.getAttribute('style') === '') el.removeAttribute('style');
+    }
+  });
+  range.insertNode(frag);
+  saveSel();
+}
+
+/* SAFE EXEC */
+function safeExec(cmd, val=null){
+  restoreSel(); ensureFocus();
+  try{ document.execCommand('styleWithCSS', false, true); }catch(e){}
+  document.execCommand(cmd, false, val);
+  saveSel();
+}
+
+/* wiring */
+document.addEventListener('DOMContentLoaded', ()=>{
+
+  const editor = document.getElementById('editor');
+
+  // basic command buttons
+  document.querySelectorAll('.btn[data-cmd]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      safeExec(btn.dataset.cmd);
+      updateActive();
+    });
+  });
+
+  // lists
+  document.getElementById('btn-ul').addEventListener('click', ()=>{ safeExec('insertUnorderedList'); updateActive(); });
+  document.getElementById('btn-ol').addEventListener('click', ()=>{ safeExec('insertOrderedList'); updateActive(); });
+
+  // openable controls: prevent mousedown default to keep selection
+  document.querySelectorAll('.control.openable').forEach(c=>{
+    c.addEventListener('mousedown', e=>{ e.preventDefault(); }); // keep selection
+    c.addEventListener('click', (e)=>{
+      const id = 'dd-' + c.dataset.dd;
+      const dd = document.getElementById(id);
+      if(!dd) return;
+      dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+      e.stopPropagation();
+    });
+  });
+
+  document.addEventListener('click', ()=> document.querySelectorAll('.dropdown').forEach(d=>d.style.display='none'));
+
+  // size: ensure restoreSel before applying
+document.querySelectorAll('#dd-size .item').forEach(it=>{
+  it.addEventListener('click', (e)=>{
+    e.stopPropagation(); // FIX
+    restoreSel(); ensureFocus();
+    wrapInline('fontSize', it.dataset.size + 'px');
+    document.getElementById('sizeLabel').innerText = it.dataset.size + 'px';
+    it.closest('.dropdown').style.display = 'none';
+  });
+});
+
+  // font
+  document.querySelectorAll('#dd-font .item').forEach(it=>{
+  it.addEventListener('click', (e)=>{
+    e.stopPropagation(); // FIX
+    restoreSel(); ensureFocus();
+    wrapInline('fontFamily', it.dataset.font);
+    const lab=document.getElementById('fontLabel');
+    lab.innerText=it.dataset.font;
+    lab.style.fontFamily=it.dataset.font;
+    it.closest('.dropdown').style.display = 'none';
+  });
+});
+
+  // font color
+document.querySelectorAll('#dd-color .item').forEach(it=>{
+  it.addEventListener('click', (e)=>{
+    e.stopPropagation(); // FIX
+    restoreSel(); ensureFocus();
+    wrapInline('color', it.dataset.color);
+    document.getElementById('colorLabel').style.color = it.dataset.color;
+    it.closest('.dropdown').style.display = 'none';
+  });
+});
+
+  // highlight
+  document.querySelectorAll('#dd-highlight .item').forEach(it=>{
+  it.addEventListener('click', (e)=>{
+    e.stopPropagation(); // FIX
+    const val = it.dataset.hl;
+    if(val === 'none'){
+      clearHighlightInSelection();
+      document.getElementById('hlPreview').style.background = '#fff';
+    } else {
+      restoreSel(); ensureFocus();
+      wrapInline('backgroundColor', val);
+      document.getElementById('hlPreview').style.background = val;
+    }
+    it.closest('.dropdown').style.display = 'none';
+  });
+});
+
+  // selectionchange: save selection and update active
+  document.addEventListener('selectionchange', ()=>{
+    updateActive();
+    saveSel();
+  });
+
+  // save selection on mouse/keyboard/touch end
+  ['mouseup','keyup','touchend'].forEach(ev=>editor.addEventListener(ev, saveSel));
+
+  // SAVE button
+  document.getElementById('saveBtn').addEventListener('click', async ()=>{
+    saveSel();
+    const html = editor.innerHTML;
+    const payload = {
+      message: html,
+      user: localStorage.getItem('nama') || 'Unknown',
+      time: new Date().toLocaleString('id-ID')
+    };
+
+    let ok = false;
+    try{
+      const r = await fetch(API, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if(r.ok) ok = true;
+    }catch(e){}
+
+    if(!ok){
+      try{ localStorage.setItem('customMessage', html); ok = true; }catch(e){}
+    }
+
+    if(ok) location.href = 'home.html';
+    else alert('Gagal menyimpan');
+  });
+
+  // cancel
+  document.getElementById('cancelBtn').addEventListener('click', ()=> location.href='home.html');
+
+  // load existing
+  (async ()=>{
+    try{
+      const r = await fetch(API);
+      if(r.ok){
+        const j = await r.json();
+        if(j.message) editor.innerHTML = j.message;
+        return;
+      }
+    }catch(e){}
+    const l = localStorage.getItem('customMessage');
+    if(l) editor.innerHTML = l;
+  })();
+
+}); // DOMContentLoaded end
+
+/* updateActive */
+function updateActive(){
+  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('active'));
+  try{
+    if(document.queryCommandState('bold')) document.querySelector('.btn[data-cmd="bold"]').classList.add('active');
+    if(document.queryCommandState('italic')) document.querySelector('.btn[data-cmd="italic"]').classList.add('active');
+    if(document.queryCommandState('underline')) document.querySelector('.btn[data-cmd="underline"]').classList.add('active');
+    if(document.queryCommandState('justifyLeft')) document.querySelector('.btn[data-cmd="justifyLeft"]').classList.add('active');
+    if(document.queryCommandState('justifyCenter')) document.querySelector('.btn[data-cmd="justifyCenter"]').classList.add('active');
+    if(document.queryCommandState('justifyRight')) document.querySelector('.btn[data-cmd="justifyRight"]').classList.add('active');
+    if(document.queryCommandState('justifyFull')) document.querySelector('.btn[data-cmd="justifyFull"]').classList.add('active');
+  }catch(e){}
+}
+</script>
+
+</body>
+</html>

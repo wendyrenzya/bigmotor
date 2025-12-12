@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Caveat:wght@400;600&family=Shadows+Into+Light&display=swap" rel="stylesheet">
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Big Motor Apps — Beranda</title>
@@ -15,33 +16,11 @@
   box-shadow:0 2px 8px rgba(0,0,0,0.14);
 }
 
-.custom-info-card, .sticky-card {
-  transition: transform .12s ease;
-}
-.custom-info-card:active,
-.sticky-card:active {
-  transform: scale(0.96);
-}
-
-.price-card {
-  transition: transform .12s ease;
-}
-.price-card:active {
-  transform: scale(0.96);
-}
-
 .menu-item {
   transition: transform .12s ease;
 }
 .menu-item:active {
   transform: scale(0.92);
-}
-.custom-info-card, .sticky-card {
-  transition: transform .12s ease;
-}
-.custom-info-card:active,
-.sticky-card:active {
-  transform: scale(0.96);
 }
 
 /* HEADER WRAP */
@@ -78,7 +57,7 @@ body{
 /* STICKY MESSAGE (scroll normal) */
 .sticky-card{
   background:var(--card);
-  margin:20px 16px 22px;
+  margin:20px 16px 8px;
   padding:16px;
   border-radius:14px;
   box-shadow:0 3px 10px rgba(0,0,0,0.10);
@@ -90,13 +69,13 @@ body{
 /* CUSTOM MESSAGE */
 .custom-info-card{
   background:var(--card);
-  margin:20px 16px 4px;
+  margin:20px 16px 8px;
   padding:16px;
   border-radius:16px;
   box-shadow:0 3px 10px rgba(0,0,0,0.10);
   font-size:14px;color:#444;
   line-height:1.5;
-  white-space:pre-line;
+  white-space:normal;
   word-break:break-word;
   position:relative;
 }
@@ -139,7 +118,7 @@ body{
 /* PRICE CARDS */
 .price-card{
   background:var(--card);
-  margin:20px 16px 0;
+  margin:10px 16px 0;
   padding:14px;
   border-radius:16px;
   box-shadow:0 3px 10px rgba(0,0,0,0.10);
@@ -250,9 +229,11 @@ function initialsPrice(n){
 
 <script>
 function openEditCustom(){
-  let raw=document.getElementById("customMessage").innerText.trim();
-  raw=raw.replace("✎","").trim();
-  document.getElementById("editCustomInput").value=raw;
+  let raw=document.getElementById("customMessage").innerHTML
+  .replace(/<span class="edit-pen".*?<\/span>/,"")
+  .trim();
+
+document.getElementById("editCustomInput").innerHTML = raw;
   document.getElementById("editCustomPopup").style.display="flex";
 }
 function openEditSticky(){
@@ -318,7 +299,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     ()=>document.getElementById("editCustomPopup").style.display="none";
 
   document.getElementById("btnSaveEdit").onclick=async()=>{
-    let txt=document.getElementById("editCustomInput").value.trim();
+    let txt=document.getElementById("editCustomInput").innerHTML.trim();
     const user=localStorage.getItem("nama")||"Unknown";
     const time=new Date().toLocaleString("id-ID");
 
@@ -331,9 +312,9 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       document.getElementById("customMessage").innerHTML=
         `${txt}<span class="edit-pen" onclick="openEditCustom()">✎</span>`;
-      document.getElementById("customMeta").innerHTML=
-        `&lt;by ${user} / ${time}&gt;`;
-
+     document.getElementById("customMeta").innerHTML =
+  `<i>by ${user || "-"} ▪︎ ${time || "-"}</i>`;
+  
     }catch(e){}
 
     document.getElementById("editCustomPopup").style.display="none";
@@ -358,8 +339,8 @@ document.addEventListener("DOMContentLoaded",()=>{
 
       document.getElementById("stickyMessage").innerHTML=
         `${txt}<span class="edit-pen" onclick="openEditSticky()">✎</span>`;
-      document.getElementById("stickyMeta").innerHTML=
-        `&lt;by ${user} / ${time}&gt;`;
+    document.getElementById("stickyMeta").innerHTML =
+  `<i>by ${user || "-"} ▪︎ ${time || "-"}</i>`;
 
     }catch(e){}
 
@@ -382,7 +363,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   Memuat data...
   <span class="edit-pen">✎</span>
 </div>
-<div id="stickyMeta" style="font-size:11px;color:#888;text-align:center;margin-top:-10px;margin-bottom:16px;"></div>
+
+<div id="stickyMeta"
+  style="font-size:11px;color:#888;text-align:right;margin:0 16px 0;">
+</div>
+
 
 <!-- GRID -->
 <div class="grid">
@@ -399,7 +384,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   Memuat data...
   <span class="edit-pen">✎</span>
 </div>
-<div id="customMeta" style="text-align:center;font-size:11px;color:#888;margin-bottom:16px;"></div>
+<div id="customMeta"
+  style="font-size:11px;color:#888;text-align:right;margin:4px 16px 0;">
+</div>
+
 
 <!-- PRICE CARDS -->
 <div id="priceCards"></div>
@@ -485,21 +473,42 @@ loadLatestPriceCards();
 
     document.getElementById("customMessage").innerHTML=
       `${c.message||""}<span class="edit-pen" onclick="openEditCustom()">✎</span>`;
-    document.getElementById("customMeta").innerHTML=
-      `&lt;by ${c.user||"-"} / ${c.time||"-"}&gt;`;
-
+    document.getElementById("customMeta").innerHTML =
+  `<i>by ${c.user} ▪︎ ${c.time}</i>`;
+  
     const rs=await fetch(SETTINGS_BASE+"/api/settings/sticky");
     const k=await rs.json();
 
     document.getElementById("stickyMessage").innerHTML=
       `${k.message||""}<span class="edit-pen" onclick="openEditSticky()">✎</span>`;
-    document.getElementById("stickyMeta").innerHTML=
-      `&lt;by ${k.user||"-"} / ${k.time||"-"}&gt;`;
-
+    document.getElementById("stickyMeta").innerHTML =
+  `<i>by ${k.user} ▪︎ ${k.time}</i>`;
+  
   }catch(e){}
 })();
 </script>
+<script>
+// cegah paste membawa format
+document.getElementById("editCustomInput").addEventListener("paste", function(e){
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+  document.execCommand("insertText", false, text);
+});
 
+// cegah browser meniru format sebelumnya (bold/italic)
+document.getElementById("editCustomInput").addEventListener("beforeinput", function(e){
+  if (e.inputType.startsWith("format")) {
+    e.preventDefault();
+  }
+});
+
+// hapus style otomatis yang terbawa saat mengetik
+document.getElementById("editCustomInput").addEventListener("keyup", function(){
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  document.execCommand("removeFormat");
+});
+</script>
 <!-- POPUP CUSTOM -->
 <div id="editCustomPopup"
 style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.35);
@@ -507,17 +516,29 @@ align-items:center;justify-content:center;">
   <div class="popup-body">
     <div style="font-weight:800;font-size:16px;margin-bottom:10px;">Edit Pesan</div>
 
-    <textarea id="editCustomInput" placeholder="Tulis pesan..."
-      style="width:100%;max-height:300px;min-height:120px;overflow:auto;
-      border:1px solid #e6e6e6;border-radius:10px;
-      padding:10px;font-size:14px;resize:none;"></textarea>
+    <div id="editCustomInput"
+     contenteditable="true"
+     style="width:100%;min-height:120px;max-height:300px;
+            overflow:auto;border:1px solid #e6e6e6;border-radius:10px;
+            padding:10px;font-size:14px;line-height:1.5;
+            background:#fff;white-space:pre-wrap;">
+</div>
 
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
-      <button id="btnCancelEdit"
-        style="padding:8px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;">Batal</button>
-      <button id="btnSaveEdit"
-        style="padding:8px 12px;border-radius:10px;">Simpan</button>
-    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+
+  <button onclick="location.href='editor.html'"
+    style="padding:8px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;">
+    Customize
+  </button>
+
+  <div style="display:flex;gap:10px;">
+    <button id="btnCancelEdit"
+      style="padding:8px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;">Batal</button>
+    <button id="btnSaveEdit"
+      style="padding:8px 12px;border-radius:10px;">Simpan</button>
+  </div>
+
+</div>
   </div>
 </div>
 
@@ -541,18 +562,6 @@ align-items:center;justify-content:center;">
     </div>
   </div>
 </div>
-<script>
-const grid = document.querySelector('.grid');
-const topPos = grid.offsetTop;
-
-window.addEventListener('scroll',()=>{
-  if(window.scrollY > topPos - 100){
-    grid.classList.add('stuck');
-  } else {
-    grid.classList.remove('stuck');
-  }
-});
-</script>
 
 </body>
 </html>
