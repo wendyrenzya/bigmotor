@@ -6,6 +6,8 @@
 <title>Edit Barang — BigMotor</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
+<script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
 
 <style>
 :root{
@@ -24,6 +26,40 @@ body{margin:0;background:var(--bg);color:#111;}
 .grid{display:grid;grid-template-columns:1fr 340px;gap:22px;}
 @media(max-width:880px){.grid{grid-template-columns:1fr;}}
 .label{margin-top:16px;margin-bottom:6px;font-weight:700;font-size:14px;}
+
+#cropPopup, #cropFinalPopup {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,.55);
+  display:none; align-items:center; justify-content:center;
+  z-index:999999;
+}
+
+.cropBox {
+  background:#fff;
+  padding:16px;
+  border-radius:14px;
+  width:90%; max-width:420px;
+}
+
+.cropArea {
+  width:100%; 
+  aspect-ratio:1/1;
+  background:#000;
+  border-radius:12px;
+  overflow:hidden;
+  position:relative;
+}
+
+.cropButtons {
+  display:flex;
+  gap:10px;
+  margin-top:12px;
+}
+
+#finalPreviewImg {
+  width:100%;
+  border-radius:12px;
+}
 
 .input,textarea,.selectBox{
   width:100%;padding:12px;border-radius:12px;
@@ -61,10 +97,26 @@ body{margin:0;background:var(--bg);color:#111;}
 .kategoriGrid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-  gap:8px;background:#fff;padding:10px;border-radius:12px;
-  box-shadow:0 8px 24px rgba(15,30,60,0.06);
-  position:absolute;z-index:99999;
-  max-width:96vw;max-height:60vh;overflow:auto;
+  gap:8px;
+  background:#fff;
+  padding:14px;
+  border-radius:14px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.15);
+  max-width:90vw;
+  max-height:70vh;
+  overflow:auto;
+
+  position:relative;
+
+  /* ANIMASI POPUP */
+  opacity:0;
+  transform:scale(0.4);
+  transition:transform .18s cubic-bezier(.25,.1,.3,1),
+             opacity .18s ease-out;
+}
+.kategoriGrid.show{
+  opacity:1;
+  transform:scale(1);
 }
 
 .katItem{
@@ -94,63 +146,113 @@ body{margin:0;background:var(--bg);color:#111;}
   </div>
 
   <div class="card">
-    <div class="grid">
 
-      <!-- LEFT -->
-      <div>
-
-        <input id="barangId" type="hidden">
-
-        <label class="label">Nama</label>
-        <input id="nama" class="input" autocomplete="off" spellcheck="false">
-
-        <label class="label">Kategori</label>
-        <div id="kategoriSelect" class="selectBox" data-value="">
-          <span id="kategoriText">Pilih kategori</span>
-          <span>▾</span>
-        </div>
-
-        <label class="label">Harga</label>
-        <input id="harga" class="input" inputmode="numeric" placeholder="Rp 0">
-
-        <label class="label">Harga Modal</label>
-        <input id="harga_modal" class="input" inputmode="numeric" placeholder="Rp 0">
-
-        <!-- STOCK GREY + NON EDIT -->
-        <label class="label">Stock</label>
-        <input id="stock" class="input" readonly style="background:#f3f4f6;color:#777;">
-        <div style="margin-top:4px;font-size:13px;color:#777;">
-          Stok hanya bisa di audit
-        </div>
-
-        <label class="label">Deskripsi</label>
-        <textarea id="deskripsi" class="input textarea"></textarea>
-
-        <br>
-        <button id="btnSave" class="btn">Simpan Perubahan</button>
-
+  <!-- FOTO + STOK DI ATAS (MENYERUPAI barang_detail.html) -->
+  <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:18px;">
+    
+    <!-- FOTO -->
+    <div>
+      <div id="preview" class="preview" style="width:220px;height:220px;">
+        Tidak ada gambar
       </div>
 
-      <!-- RIGHT -->
-      <div>
+     
+     <button id="btnFotoToggle" class="btn-muted" 
+  style="margin-top:12px;width:220px;font-weight:700;">
+  Edit Foto ▾
+</button>
 
-        <label class="label">Preview Foto</label>
-        <div id="preview" class="preview">Tidak ada gambar</div>
-
-        <label class="label" style="margin-top:12px">Foto (URL)</label>
-        <input id="fotoUrl" class="input" autocomplete="off">
-
-        <label class="label" style="margin-top:12px">Upload</label>
-        <input id="fileInput" type="file" accept="image/*" style="display:none">
-
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button id="btnUpload" class="btn-muted" style="flex:1">Pilih File</button>
-          <button id="btnImgSearch" class="btn-muted" style="flex:1">Cari Google</button>
-        </div>
-
-      </div>
 
     </div>
+
+    <!-- STOK -->
+    <div>
+      <div class="stock-label" style="font-size:15px;font-weight:700;color:#555;margin-bottom:4px;">
+        Stok
+      </div>
+     
+
+      <input id="stock" class="input" readonly
+        style="background:#f3f4f6;color:#777;margin-top:10px;">
+      <div style="margin-top:4px;font-size:13px;color:#777;">
+        Stok hanya bisa di audit
+      </div>
+      
+    </div>
+
+  </div>
+<div id="fotoPanel" style="display:none; margin-top:10px;">
+
+  <!-- FOTO URL -->
+  <label class="label" style="margin-top:12px">Foto (URL)</label>
+  <input id="fotoUrl" class="input" autocomplete="off">
+
+  <!-- UPLOAD -->
+  <label class="label" style="margin-top:16px">Upload</label>
+  <input id="fileInput" type="file" accept="image/*" style="display:none">
+
+  <button id="btnUpload" class="btn-muted" 
+          style="width:100%;text-align:center;margin-top:6px;">
+    Pilih File
+  </button>
+
+  <!-- CARI GOOGLE -->
+  <label class="label" style="margin-top:20px">Cari Google</label>
+
+  <div style="display:flex; gap:8px; margin-top:6px;">
+
+    <!-- Keyword -->
+    <button id="btnKeywordSearch" class="btn-muted" style="flex:1">
+      Keyword
+    </button>
+
+    <!-- Tombol Google dengan logo resmi -->
+    <button id="btnImgSearch" class="btn-muted"
+            style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3" width="18" height="18">
+        <path fill="#4285F4" d="M533.5 278.4c0-17.4-1.6-34.1-4.6-50.3H272v95.2h147.3c-6.4 34.6-25.7 63.8-54.8 83.3v68h88.5c51.8-47.7 80.5-118 80.5-196.2z"/>
+        <path fill="#34A853" d="M272 544.3c73.9 0 135.9-24.5 181.2-66.8l-88.5-68c-24.6 16.5-56.1 26-92.7 26-71 0-131.1-47.9-152.8-112.5H28.2v70.7c45 88.8 137.2 150.6 243.8 150.6z"/>
+        <path fill="#FBBC05" d="M119.2 323c-10.4-30.6-10.4-63.8 0-94.4V157.9H28.2c-39.4 78.8-39.4 172.4 0 251.2l91-70.1z"/>
+        <path fill="#EA4335" d="M272 107.7c39.9-.6 78.3 14 107.5 40.9l80.2-80C424.5 24.3 353.8-.1 272 0 165.4 0 73.2 61.7 28.2 150.5l91 70.1c21.7-64.6 81.8-112.5 152.8-112.9z"/>
+      </svg>
+      Google
+    </button>
+
+  </div>
+
+</div>
+</div>
+  <!-- FORM BAWAH -->
+  <div class="grid">
+
+    <div>
+      <input id="barangId" type="hidden">
+
+      <label class="label">Nama</label>
+      <input id="nama" class="input" autocomplete="off" spellcheck="false">
+
+      <label class="label">Kategori</label>
+      <div id="kategoriSelect" class="selectBox" data-value="">
+        <span id="kategoriText">Pilih kategori</span>
+        <span>▾</span>
+      </div>
+
+      <label class="label">Harga</label>
+      <input id="harga" class="input" inputmode="numeric" placeholder="Rp 0">
+
+      <label class="label">Harga Modal</label>
+      <input id="harga_modal" class="input" inputmode="numeric" placeholder="Rp 0">
+
+      <label class="label">Deskripsi</label>
+      <textarea id="deskripsi" class="input textarea"></textarea>
+
+      <br>
+      <button id="btnSave" class="btn">Simpan Perubahan</button>
+    </div>
+
+    <!-- KOSONGKAN KANAN KARENA FOTO SUDAH DIPINDAH -->
+    <div></div>
+
   </div>
 
 </div>
@@ -180,6 +282,7 @@ body{margin:0;background:var(--bg);color:#111;}
 </div>
 
 <script>
+  document.addEventListener("DOMContentLoaded", () => {  
 /* ==== KEYS ==== */
 const API_BASE="https://api.bigmotor.biz.id";
 const IMGBB_KEY="5b383ab30d119c897eaacce08f9554bd";
@@ -270,30 +373,84 @@ async function loadKategori(){
   });
 }
 
-function openKategori(){
-  closeKategori();
-  document.body.appendChild(kategoriGrid);
-  const rect=$("kategoriSelect").getBoundingClientRect();
-  kategoriGrid.style.left=(rect.left+window.scrollX)+"px";
-  kategoriGrid.style.top=(rect.bottom+window.scrollY+6)+"px";
-  kategoriGrid.style.minWidth=rect.width+"px";
-  setTimeout(()=>document.addEventListener("click",outsideKategori),10);
+// helper: pastikan overlay ada, buat kalau belum
+function ensureKatOverlay(){
+  let ov = document.getElementById("katOverlay");
+  if (!ov){
+    ov = document.createElement("div");
+    ov.id = "katOverlay";
+    ov.style = "position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:99999;";
+    document.body.appendChild(ov);
+  }
+  return ov;
 }
+
+// safe open: tunggu loadKategori jika perlu, lalu tampilkan popup dari posisi select
+function openKategori(){
+  // jika overlay belum ada, buat
+  const ov = ensureKatOverlay();
+
+  // jika kategoriGrid belum dibuat, panggil loadKategori() dan lanjutkan setelah selesai
+  const ensureGrid = kategoriGrid ? Promise.resolve() : loadKategori();
+
+  ensureGrid.then(()=>{
+    if(!kategoriGrid){
+      showNotif("Gagal memuat kategori");
+      return;
+    }
+
+    // jika sudah ada di DOM, jangan append lagi
+    if (!kategoriGrid.parentNode){
+      ov.appendChild(kategoriGrid);
+    }
+
+    ov.style.display = "flex";
+
+    // tentukan origin animasi berdasarkan posisi select (global coordinates)
+    const rect = $("kategoriSelect").getBoundingClientRect();
+    // transformOrigin can be set using page coordinates; keep as pixels
+    kategoriGrid.style.transformOrigin =
+      `${rect.left + rect.width/2}px ${rect.top + rect.height/2}px`;
+
+    // trigger show class for animation (use RAF to ensure style applied)
+    requestAnimationFrame(()=> kategoriGrid.classList.add("show"));
+
+    // close when clicking outside popup (small delay to avoid immediate close)
+    setTimeout(()=>document.addEventListener("click", outsideKategori), 10);
+  }).catch(()=>{
+    showNotif("Gagal memuat kategori");
+  });
+}
+
+// safe close: reverse animation then remove
 function closeKategori(){
-  if(kategoriGrid&&kategoriGrid.parentNode) kategoriGrid.remove();
-  document.removeEventListener("click",outsideKategori);
+  if(!kategoriGrid) {
+    const ov = document.getElementById("katOverlay");
+    if(ov) ov.style.display = "none";
+    document.removeEventListener("click", outsideKategori);
+    return;
+  }
+
+  // remove show to trigger reverse animation
+  kategoriGrid.classList.remove("show");
+
+  // after animation ends remove popup and hide overlay
+  setTimeout(()=>{
+    const ov = document.getElementById("katOverlay");
+    try{ if(kategoriGrid.parentNode) kategoriGrid.remove(); }catch(_){}
+    if(ov) ov.style.display = "none";
+  }, 200);
+
+  document.removeEventListener("click", outsideKategori);
 }
 function outsideKategori(e){
-  if(!kategoriGrid.contains(e.target)&&!$("kategoriSelect").contains(e.target)){
+  const ov = document.getElementById("katOverlay");
+  
+  // close hanya jika klik tepat pada overlay (area gelap)
+  if (e.target === ov){
     closeKategori();
   }
 }
-$("kategoriSelect").onclick=e=>{
-  e.stopPropagation();
-  if(kategoriGrid&&kategoriGrid.parentNode) closeKategori();
-  else openKategori();
-};
-
 /* =========================
    RUPIAH FORMATTER (FIX)
 ========================= */
@@ -315,30 +472,83 @@ installRupiah($("harga_modal"));
    UPLOAD IMGBB
 ========================= */
 $("btnUpload").onclick=()=>$("fileInput").click();
-$("fileInput").addEventListener("change", async e=>{
-  const f=e.target.files[0];
-  if(!f) return;
+let cropper;
+let selectedFile;
+let croppedBlob;
 
-  const fd=new FormData();
-  fd.append("image",f);
+/* STEP 1 — PILIH FILE (FIX: tunggu gambar load sebelum init cropper) */
+$("fileInput").addEventListener("change", e => {
+  const f = e.target.files[0];
+  if (!f) return;
 
-  try{
-    const r=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{
-      method:"POST",body:fd
+  selectedFile = f;
+
+  const url = URL.createObjectURL(f);
+  const img = $("cropImage");
+
+  // pastikan event onload dipasang SEBELUM set src
+  img.onload = () => {
+    // buka popup crop
+    $("cropPopup").style.display = "flex";
+
+    // hancurkan cropper lama
+    if (cropper) cropper.destroy();
+
+    cropper = new Cropper(img, {
+      viewMode: 1,
+      aspectRatio: 1,
+      dragMode: "move",
+      guides: true,
+      background: false,
+      movable: true,
+      zoomable: true,
+      scalable: false,
+      rotatable: false
     });
-    const j=await r.json();
-    const url=j?.data?.url||j?.data?.display_url;
-    if(url){
-      $("fotoUrl").value=url;
-      updatePreview(url);
-      showNotif("✔ Upload berhasil");
-    } else showNotif("Upload gagal");
-  }catch(_){
-    showNotif("Upload gagal");
-  }
+  };
 
-  $("fileInput").value="";
+  // set src setelah onload didefinisikan
+  img.src = url;
 });
+
+/* STEP 2 — PILIH FOTO LAIN */
+$("cropChooseAgain").onclick = () => {
+  $("cropPopup").style.display = "none";
+  $("fileInput").click();
+};
+
+/* STEP 3 — OK, AMBIL HASIL CROP */
+$("cropOk").onclick = () => {
+  const canvas = cropper.getCroppedCanvas({
+    width: 600,
+    height: 600
+  });
+
+  canvas.toBlob(b=>{
+    croppedBlob = b; // simpan blob hasil crop
+    $("finalPreviewImg").src = canvas.toDataURL("image/jpeg");
+
+    $("cropPopup").style.display = "none";
+    $("cropFinalPopup").style.display = "flex";
+  }, "image/jpeg");
+};
+
+/* STEP 4 — CANCEL DI POPUP FINAL */
+$("cropCancel").onclick = ()=>{
+  croppedBlob = null;
+  $("cropFinalPopup").style.display = "none";
+};
+
+/* STEP 5 — OK FINAL: tampilkan nama file + icon attachment */
+$("cropFinalOk").onclick = ()=>{
+  $("cropFinalPopup").style.display = "none";
+
+  const name = selectedFile.name;
+  const att = `<svg width="16" height="16" fill="#555"><path d="M7.5 1a4 4 0 0 1 4 4v7a3.5 3.5 0 1 1-7 0V5a2.5 2.5 0 0 1 5 0v6a1 1 0 1 1-2 0V5h-1v6a2 2 0 1 0 4 0V5a3.5 3.5 0 0 0-7 0v7a4 4 0 1 0 8 0V5h1v7a5 5 0 1 1-10 0V5a4 4 0 0 1 4-4Z"/></svg>`;
+
+  // tampilkan nama file final
+  $("btnUpload").innerHTML = att + " " + name;
+};
 
 /* =========================
    GOOGLE IMAGE
@@ -447,14 +657,35 @@ $("btnSave").onclick = async () => {
     if(!ok) return; // user batal
   }
 
-  const payload={
-    nama:$("nama").value.trim(),
-    kategori:$("kategoriSelect").dataset.value||"",
-    harga: hargaBaru,
-    harga_modal:Number($("harga_modal").dataset.raw||0),
-    deskripsi:$("deskripsi").value.trim(),
-    foto:$("fotoUrl").value.trim()
-  };
+// jika user melakukan crop, upload croppedBlob ke IMGBB
+let finalFotoUrl = $("fotoUrl").value.trim();
+
+if (croppedBlob) {
+  const fd = new FormData();
+  fd.append("image", croppedBlob);
+
+  try {
+    const r = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+      method: "POST",
+      body: fd
+    });
+
+    const j = await r.json();
+    // Ambil url hasil upload
+    finalFotoUrl = j?.data?.url || j?.data?.display_url || finalFotoUrl;
+
+  } catch (e) {
+    showNotif("Upload foto gagal");
+  }
+}
+  const payload = {
+  nama: $("nama").value.trim(),
+  kategori: $("kategoriSelect").dataset.value || "",
+  harga: hargaBaru,
+  harga_modal: Number($("harga_modal").dataset.raw || 0),
+  deskripsi: $("deskripsi").value.trim(),
+  foto: finalFotoUrl
+};
 
   if(!payload.nama || !payload.kategori || !payload.harga){
     showNotif("Lengkapi field wajib");
@@ -498,6 +729,76 @@ $("btnBack").onclick=()=>history.back();
 /* init */
 loadKategori();
 loadBarang();
+
+$("kategoriSelect").onclick = (e)=>{
+  e.stopPropagation();
+  if(kategoriGrid && kategoriGrid.parentNode) closeKategori();
+  else openKategori();
+};
+
+$("btnKeywordSearch").onclick = async () => {
+  let keyword = prompt("Masukkan keyword pencarian");
+
+  if (!keyword || !keyword.trim()) {
+    showNotif("Keyword kosong");
+    return;
+  }
+
+  // buka popup
+  $("imgSearchPopup").style.display = "flex";
+  const list = $("imgSearchList");
+  list.innerHTML = "Mencari foto dari Google…";
+
+  const url =
+    `https://www.googleapis.com/customsearch/v1?searchType=image&num=10&safe=off&gl=id&hl=id` +
+    `&q=${encodeURIComponent(keyword)}` +
+    `&key=${GOOGLE_KEY}` +
+    `&cx=${GOOGLE_CX}`;
+
+  try {
+    const r = await fetch(url);
+    const j = await r.json();
+    const imgs = (j.items || []).map(x => x.link);
+
+    if (!imgs.length) {
+      list.innerHTML = "<div style='padding:15px;text-align:center;color:#777'>Tidak ada hasil.</div>";
+      return;
+    }
+
+    list.innerHTML = "";
+    imgs.forEach(u => {
+      const img = document.createElement("img");
+      img.src = u;
+      img.style.width = "100%";
+      img.style.borderRadius = "10px";
+      img.style.cursor = "pointer";
+      img.onclick = () => {
+        $("fotoUrl").value = u;
+        updatePreview(u);
+        $("imgSearchPopup").style.display = "none";
+        showNotif("✔ Foto dipilih");
+      };
+      list.appendChild(img);
+    });
+
+  } catch (e) {
+    list.innerHTML = "<div style='padding:15px;text-align:center;color:#777'>Terjadi kesalahan.</div>";
+  }
+};
+
+$("btnFotoToggle").onclick = () => {
+  const box = $("fotoPanel");
+  const btn = $("btnFotoToggle");
+
+  if (box.style.display === "none") {
+    box.style.display = "block";
+    btn.innerHTML = "Edit Foto ▲";
+  } else {
+    box.style.display = "none";
+    btn.innerHTML = "Edit Foto ▾";
+  }
+};
+}); // END DOMContentLoaded
 </script>
 
 <!-- CONFIRM MODAL -->
@@ -510,6 +811,41 @@ loadBarang();
     </div>
   </div>
 </div>
+<div id="katOverlay" style="
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.45);
+  z-index:99999;">
+  
+  
+</div>
+<!-- POPUP CROP -->
+<div id="cropPopup">
+  <div class="cropBox">
+    <div class="cropArea">
+      <img id="cropImage" style="width:100%; display:block;">
+    </div>
 
+    <div class="cropButtons">
+      <button id="cropChooseAgain" class="btn-muted" style="flex:1;">Pilih Foto Lain</button>
+      <button id="cropOk" class="btn" style="flex:1;">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP HASIL CROP -->
+<div id="cropFinalPopup">
+  <div class="cropBox">
+    <img id="finalPreviewImg">
+
+    <div class="cropButtons">
+      <button id="cropCancel" class="btn-muted" style="flex:1;">Batal</button>
+      <button id="cropFinalOk" class="btn" style="flex:1;">OK</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
